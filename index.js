@@ -15,9 +15,9 @@ function initWeb3RPCTimeout(result, cb) {
 }
 
 function initWeb3RPC(result, cb) {
-	var host = config.web3RPCHost;
-	var port = config.web3RPCPort;
-	var httpProvider = Web3RPC.providers.HttpProvider;
+	let host = config.web3RPCHost;
+	let port = config.web3RPCPort;
+	let httpProvider = Web3RPC.providers.HttpProvider;
 	result.web3 = new Web3RPC(new httpProvider("http://" + host + ":" + port));
 	let wrapped = async.timeout(initWeb3RPCTimeout, 5000);
 	wrapped(result, function (err, res) {
@@ -48,10 +48,10 @@ function createAccounts(result, cb) {
 	let web3 = result.web3;
 	let stdout = process.stdout;
 
-	var numAccounts = txOptions.numAccounts;
+	let numAccounts = txOptions.numAccounts;
 	let numExistingAccounts = result.web3.eth.accounts.length;
 
-	var count = numExistingAccounts;
+	let count = numExistingAccounts;
 	if (count < numAccounts) {
 		async.whilst(function() {
 			return (count < numAccounts);
@@ -80,10 +80,10 @@ function unlockAccounts(result, cb) {
 	let web3 = result.web3;
 	let stdout = process.stdout;
 	
-	var numAccounts = txOptions.numAccounts;
+	let numAccounts = txOptions.numAccounts;
 	let numExistingAccounts = result.web3.eth.accounts.length;
 
-	var count = 0;
+	let count = 0;
 	stdout.write(`\r[INFO] Unlocking accounts: ` + count + ` / ` + numAccounts);
 	async.eachLimit(web3.eth.accounts.slice(0, numAccounts), 5, function(account, callback) {
 		count++;
@@ -104,7 +104,7 @@ function unlockAccounts(result, cb) {
 function confirmTransactions(result, cb) {
 	let web3 = result.web3;
 	let stdout = process.stdout;
-	var confirmedTransactions = 0;	
+	let confirmedTransactions = 0;	
 
 	var responseCount = 0;
 	var sentCount = 0;
@@ -136,18 +136,18 @@ function sendTransactions(result, cb) {
 	let addresses = web3.eth.accounts;
 	let timeBetweenBatches = Math.round(1000/txRatePerAccount);
 
-	var numAccounts = txOptions.numAccounts;
+	let numAccounts = txOptions.numAccounts;
 
-	var batchCount = 0;
-	var totalTxRate = txRatePerAccount*numAccounts;
-	var elapsedTime = 0;
-	var responseCount = 0;
-	var sentCount = 0;
+	let batchCount = 0;
+	let totalTxRate = txRatePerAccount*numAccounts;
+	let elapsedTime = 0;
+	let responseCount = 0;
+	let sentCount = 0;
 
-	var prevTime = (new Date()).getTime();
-	var currentTime = (new Date()).getTime();
+	let prevTime = (new Date()).getTime();
+	let currentTime = (new Date()).getTime();
 
-	var intervalID = setInterval(function() {
+	let intervalID = setInterval(function() {
 		batchCount++;
 		elapsedTime = batchCount*timeBetweenBatches/1000;
 		if (elapsedTime <= config.maxTime) {
