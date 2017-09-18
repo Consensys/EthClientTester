@@ -10,8 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "async": "^2.5.0",
-    "web3": "file:../web3Quorum.js",
     "web3_ipc": "^1.4.0",
-    "web3admin": "^0.4.4"
+    "web3admin": "^0.4.4",
+    "web3quorum": "^0.20.3"
   }
 }

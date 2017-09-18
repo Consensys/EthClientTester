@@ -18,10 +18,10 @@ config.web3RPCPort = "20010"
 
 config.txOptions = {
 	txRatePerAccount: 1,			// transaction rate per account per second
-	numAccounts: 10,					// number of accounts
+	numAccounts: 1,					// number of accounts
 	value: 10
 };
 
-config.maxTime = 18000;
+config.maxTime = 10;
 
 module.exports = config

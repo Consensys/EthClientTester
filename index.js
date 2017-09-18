@@ -1,5 +1,5 @@
 var async = require('async')
-var Web3RPC = require('web3')
+var Web3RPC = require('web3quorum')
 var Web3Admin = require('web3admin')
 var config = require('./config.js')
 
