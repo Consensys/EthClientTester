@@ -47,7 +47,7 @@ function createAccounts(result, cb) {
 	let txOptions = config.txOptions;
 	let web3 = result.web3;
 	let stdout = process.stdout;
-	
+
 	var numAccounts = txOptions.numAccounts;
 	let numExistingAccounts = result.web3.eth.accounts.length;
 
@@ -62,12 +62,12 @@ function createAccounts(result, cb) {
 				callback(err, res);
 			});
 		}, function(err) {
-			if (!err) {
-				console.log();
+			if (err) {
+				cb(err, null);
 			} else {
-				console.log("ERROR: ", err);
+				console.log();
+				cb(null, result);
 			}
-			cb(null, result);
 		});
 	} else {
 		console.log("[INFO] Skipping account creation: No additional accounts needed");
@@ -92,12 +92,12 @@ function unlockAccounts(result, cb) {
 			callback(err, res);
 		});			
 	}, function(err) {
-		if (!err) {
-			console.log();
+		if (err) {
+			cb(err, null);
 		} else {
-			console.log("ERROR: ", err);
+			console.log();
+			cb(null, result);
 		}
-		cb(null, result);
 	});
 }
 
