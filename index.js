@@ -4,28 +4,28 @@ var Web3Admin = require('web3admin')
 var config = require('./config.js')
 
 var sentTxHashes = []
-var submittedCount = 0;
-var sendErrors = 0;
+var numSubmittedTransaction = 0;
+var numSendErrors = 0;
 var actualElapsedTime = 0;
-
-function initWeb3RPCTimeout(result, cb) {
-	result.web3.eth.getBlockNumber(function(err, res) {
-		cb(null, result);
-	});
-}
 
 function initWeb3RPC(result, cb) {
 	let host = config.web3RPCHost;
 	let port = config.web3RPCPort;
 	let httpProvider = Web3RPC.providers.HttpProvider;
 	result.web3 = new Web3RPC(new httpProvider("http://" + host + ":" + port));
-	let wrapped = async.timeout(initWeb3RPCTimeout, 5000);
-	wrapped(result, function (err, res) {
+	result.web3.eth.getBlockNumber(function(err, res) {
+		console.log("[INFO] Web3 RPC initialized: Connected to " + host + ":" + port);
+		cb(null, result);
+	});
+}
+
+function initWeb3RPCTimeout(result, cb) {
+	let wrappedInitWeb3RPC = async.timeout(initWeb3RPC, config.web3RPCInitTimeoutMillis);
+	wrappedInitWeb3RPC(result, function (err, res) {
 		if (err) { 
 			console.log("[ERROR] Failed to initialize Web3 RPC: timeout");
 			cb(err, null);
 		} else { 
-			console.log("[INFO] Web3 RPC initialized: Connected to " + host + ":" + port);
 			cb(null, result);
 		}
 	});
@@ -44,21 +44,20 @@ function listAccounts(result, cb) {
 }
 
 function createAccounts(result, cb) {
-	let txOptions = config.txOptions;
-	let web3 = result.web3;
 	let stdout = process.stdout;
-
-	let numAccounts = txOptions.numAccounts;
-	let numExistingAccounts = result.web3.eth.accounts.length;
-
-	let count = numExistingAccounts;
-	if (count < numAccounts) {
+	let web3 = result.web3;
+	let numExistingAccounts = web3.eth.accounts.length;
+	let numCurrentAccounts = numExistingAccounts;
+	let txOptions = config.txOptions;
+	let numRequiredAccounts = txOptions.numAccounts;
+	
+	if (numCurrentAccounts < numRequiredAccounts) {
 		async.whilst(function() {
-			return (count < numAccounts);
+			return (numCurrentAccounts < numRequiredAccounts);
 		}, function(callback) {
-			count++;
 			web3.personal.newAccount("", function(err, res) {
-				stdout.write(`\r[INFO] Creating accounts: ` + count + ` / ` + numAccounts);
+				numCurrentAccounts++;
+				stdout.write(`\r[INFO] Creating accounts: ` + numCurrentAccounts + ` / ` + numRequiredAccounts);
 				callback(err, res);
 			});
 		}, function(err) {
@@ -76,19 +75,19 @@ function createAccounts(result, cb) {
 }
 
 function unlockAccounts(result, cb) {
-	let txOptions = config.txOptions;
-	let web3 = result.web3;
 	let stdout = process.stdout;
+	let web3 = result.web3;
+	let numExistingAccounts = web3.eth.accounts.length;
+	let txOptions = config.txOptions;
+	let numRequiredAccounts = txOptions.numAccounts;
+	let requiredAccounts = web3.eth.accounts.slice(0, numRequiredAccounts);
+	let numUnlockedAccounts = 0;
 	
-	let numAccounts = txOptions.numAccounts;
-	let numExistingAccounts = result.web3.eth.accounts.length;
-
-	let count = 0;
-	stdout.write(`\r[INFO] Unlocking accounts: ` + count + ` / ` + numAccounts);
-	async.eachLimit(web3.eth.accounts.slice(0, numAccounts), 5, function(account, callback) {
-		count++;
+	stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + ` / ` + numRequiredAccounts);
+	async.eachLimit(requiredAccounts, config.accountUnlockThreadLimit, function(account, callback) {
 		web3.personal.unlockAccount(account, "", 100000, function(err, res) {
-			stdout.write(`\r[INFO] Unlocking accounts: ` + count + ` / ` + numAccounts);
+			numUnlockedAccounts++;
+			stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + ` / ` + numRequiredAccounts);
 			callback(err, res);
 		});			
 	}, function(err) {
@@ -102,22 +101,21 @@ function unlockAccounts(result, cb) {
 }
 
 function confirmTransactions(result, cb) {
-	let web3 = result.web3;
 	let stdout = process.stdout;
-	let confirmedTransactions = 0;	
-
-	var responseCount = 0;
-	var sentCount = 0;
+	let web3 = result.web3;
+	let numConfirmedTransactions = 0;	
+	let responseCount = 0;
+	let requestCount = 0;
 	async.eachLimit(sentTxHashes, 25, function(txHash, callback) {
-		sentCount++;
+		requestCount++;
 		web3.eth.getTransactionReceipt(txHash, function(err, res) {
 			responseCount++;
 			if (err) { console.log("ERROR", err); }
-			if (!((res == undefined) || (res.blockNumber == null))) { confirmedTransactions++; }
-			stdout.write(`\r[INFO] Errors: ` + sendErrors + `, Failed: ` + (responseCount-confirmedTransactions)+ `, Confirmed: ` + confirmedTransactions + ` / ` + submittedCount);
-			if (responseCount == sentCount) {
+			if (!((res == undefined) || (res.blockNumber == null))) { numConfirmedTransactions++; }
+			stdout.write(`\r[INFO] Errors: ` + numSendErrors + `, Failed: ` + (responseCount-numConfirmedTransactions)+ `, Confirmed: ` + numConfirmedTransactions + ` / ` + numSubmittedTransactions);
+			if (responseCount == requestCount) {
 				console.log();
-				console.log("[INFO] Actual (average) tx rate: " + confirmedTransactions/(actualElapsedTime/1000) + " / s over " + (actualElapsedTime/1000) + " s");
+				console.log("[INFO] Actual (average) tx rate: " + numConfirmedTransactions/(actualElapsedTime/1000) + " / s over " + (actualElapsedTime/1000) + " s");
 				cb(null, result);
 			}
 			callback(err, res);
@@ -127,23 +125,20 @@ function confirmTransactions(result, cb) {
 }
 
 function sendTransactions(result, cb) {
-	let txOptions = config.txOptions;
-	let web3 = result.web3;
 	let stdout = process.stdout;
-
-	let txRatePerAccount = txOptions.txRatePerAccount;
-	let txValue = txOptions.value;
+	let web3 = result.web3;
 	let addresses = web3.eth.accounts;
+	let txOptions = config.txOptions;
+	let txValue = txOptions.value;
+	let txRatePerAccount = txOptions.txRatePerAccount;
+	let numRequiredAccounts = txOptions.numAccounts;
 	let timeBetweenBatches = Math.round(1000/txRatePerAccount);
-
-	let numAccounts = txOptions.numAccounts;
+	let totalTxRate = txRatePerAccount*numRequiredAccounts;
 
 	let batchCount = 0;
-	let totalTxRate = txRatePerAccount*numAccounts;
 	let elapsedTime = 0;
 	let responseCount = 0;
-	let sentCount = 0;
-
+	let requestCount = 0;
 	let prevTime = (new Date()).getTime();
 	let currentTime = (new Date()).getTime();
 
@@ -152,8 +147,8 @@ function sendTransactions(result, cb) {
 		elapsedTime = batchCount*timeBetweenBatches/1000;
 		if (elapsedTime <= config.maxTime) {
 			let batch = web3.createBatch();
-			for (let i = 0; i < numAccounts; i++) {
-				sentCount++;
+			for (let i = 0; i < numRequiredAccounts; i++) {
+				requestCount++;
 				let tx = { from: addresses[i], to: addresses[i], value: txValue };
 				batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
 					responseCount++;
@@ -161,11 +156,11 @@ function sendTransactions(result, cb) {
 					currentTime = (new Date()).getTime();
 					actualElapsedTime += currentTime - prevTime;
 					if(err) { 
-						sendErrors++;
+						numSendErrors++;
 					} else {
 						sentTxHashes.push(txHash);
 					}
-					if ((elapsedTime >= config.maxTime) && (responseCount == sentCount)) {
+					if ((elapsedTime >= config.maxTime) && (responseCount == requestCount)) {
 						console.log();
 						clearInterval(intervalID);
 						cb(null, result);
@@ -173,9 +168,9 @@ function sendTransactions(result, cb) {
 				}));
 			}
 			batch.execute();
-			submittedCount = batchCount*numAccounts;
+			numSubmittedTransactions = batchCount*numRequiredAccounts;
 			if (batchCount % txRatePerAccount === 0) {
-				stdout.write(`\r[INFO] Submitted ` + submittedCount + ` transactions at ` + totalTxRate + ` / s`);
+				stdout.write(`\r[INFO] Submitted ` + numSubmittedTransactions + ` transactions at ` + totalTxRate + ` / s`);
 			}
 		}
 	}, timeBetweenBatches);	
@@ -183,7 +178,7 @@ function sendTransactions(result, cb) {
 
 function start() {
 	let seqInit = async.seq(
-		initWeb3RPC,
+		initWeb3RPCTimeout,
 		extendWeb3,
 		createAccounts,
 		unlockAccounts
