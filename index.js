@@ -8,13 +8,27 @@ var submittedCount = 0;
 var sendErrors = 0;
 var actualElapsedTime = 0;
 
+function initWeb3RPCTimeout(result, cb) {
+	result.web3.eth.getBlockNumber(function(err, res) {
+		cb(null, result);
+	});
+}
+
 function initWeb3RPC(result, cb) {
-	let host = config.web3RPCHost;
-	let port = config.web3RPCPort;
-	let httpProvider = Web3RPC.providers.HttpProvider;
+	var host = config.web3RPCHost;
+	var port = config.web3RPCPort;
+	var httpProvider = Web3RPC.providers.HttpProvider;
 	result.web3 = new Web3RPC(new httpProvider("http://" + host + ":" + port));
-	console.log("[INFO] Web3 RPC initialized: Connected to " + host + ":" + port);
-	cb(null, result);
+	let wrapped = async.timeout(initWeb3RPCTimeout, 5000);
+	wrapped(result, function (err, res) {
+		if (err) { 
+			console.log("[ERROR] Failed to initialize Web3 RPC: timeout");
+			cb(err, null);
+		} else { 
+			console.log("[INFO] Web3 RPC initialized: Connected to " + host + ":" + port);
+			cb(null, result);
+		}
+	});
 }
 
 function extendWeb3(result, cb) {
@@ -183,11 +197,17 @@ function start() {
 	let result = {};
 
 	seqInit(result, function(err, res) {
-		if (err) { console.log("ERROR", err) };
-		seqRun(result, function(err, result) {
-			if (err) { console.log("ERROR", err) };
-			console.log("[INFO] Done. Exiting...");
-		});
+		if (err) { 
+			console.log("ERROR", err) 
+		} else {
+			seqRun(result, function(err, result) {
+				if (err) { 
+					console.log("ERROR", err) 
+				} else {
+					console.log("[INFO] Done. Exiting...");
+				}
+			});
+		}
 	});
 }
 
