@@ -11,12 +11,6 @@ var numQueryErrors = 0;
 var actualTxElapsedTime = 0;
 var actualQueryElapsedTime = 0;
 
-
-function listAccounts(result, cb) {
-	console.log(result.web3.eth.accounts);
-	cb(null, result);
-}
-
 function createAccounts(result, cb) {
 	let stdout = process.stdout;
 	let web3 = result.web3;
