@@ -3,7 +3,9 @@ var Web3RPC = require('web3quorum')
 var Web3Admin = require('web3admin')
 var config = require('./config.js')
 
-var sentTxHashes = []
+var sentTxHashes = [];
+var accountBalances = [];
+var totalBalance = 0;
 var numSubmittedTransaction = 0;
 var numSendErrors = 0;
 var actualElapsedTime = 0;
@@ -104,6 +106,108 @@ function unlockAccounts(result, cb) {
 	});
 }
 
+function getAccountBalances(result, cb) {
+	let stdout = process.stdout;
+	let web3 = result.web3;
+	let numExistingAccounts = web3.eth.accounts.length;
+	let existingAccounts = web3.eth.accounts;
+	let responseCount = 0;
+	let requestCount = 0;
+	async.eachLimit(existingAccounts, 5, function(account, callback) {
+		requestCount++;
+		web3.eth.getBalance(account, function(err, res) {
+			if (err) { 
+				console.log("ERROR", err); 
+			} else { 
+				responseCount++;
+				accountBalances[existingAccounts.indexOf(account)] = res.toNumber(); 
+				totalBalance += res.toNumber();
+			}
+			stdout.write(`\r[INFO] Account balances retrieved: ` + responseCount + 
+				` / ` + numExistingAccounts);
+			if (responseCount == requestCount) {
+				console.log();
+				cb(null, result);
+			}
+			callback(err, res);
+		});
+	}, function (err) {
+	});
+}
+
+function collectFunds(result, cb) {
+	let stdout = process.stdout;
+	let web3 = result.web3;
+	let numExistingAccounts = web3.eth.accounts.length;
+	let existingAccounts = web3.eth.accounts;
+	let responseCount = 0;
+	let requestCount = 0;
+	let batch = web3.createBatch();
+	for (let i = 1; i < numExistingAccounts; i++) {
+		if (accountBalances[i] > 0) {
+			requestCount++;
+			let tx = {from: existingAccounts[i], to: existingAccounts[0], value: accountBalances[i]};
+			batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
+				responseCount++;
+				if(err) { 
+					cb(err, null);
+				} else {
+					stdout.write(`\r[INFO] Funds collected: ` + responseCount + 
+						` / ` + requestCount);
+					if (responseCount == requestCount) {
+						console.log();
+						cb(null, result);
+					}
+				}
+			}));
+		}
+	}
+	if (requestCount > 0) {
+		batch.execute();
+	} else {
+		cb(null, result);
+	}
+}
+
+function fundAccounts(result, cb) {
+	let stdout = process.stdout;
+	let web3 = result.web3;
+	let addresses = web3.eth.accounts;
+	let numExistingAccounts = web3.eth.accounts.length;
+	let txOptions = config.txOptions;
+	let numRequiredAccounts = txOptions.numAccounts;
+	let requiredAccounts = web3.eth.accounts.slice(0, numRequiredAccounts);
+	let requiredAccountBalances = Math.floor(totalBalance/numRequiredAccounts);
+	let responseCount = 0;
+	let requestCount = 0;
+	let batch = web3.createBatch();
+	stdout.write(`\r[INFO] Accounts funded: ` + 1 + 
+		` / ` + numRequiredAccounts);
+	for (let i = 1; i < numRequiredAccounts; i++) {
+		requestCount++;
+		let tx = { from: addresses[0], to: addresses[i], value: requiredAccountBalances };
+		batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
+			responseCount++;
+			if(err) { 
+				cb(err, null);
+			} else {
+				stdout.write(`\r[INFO] Accounts funded: ` + (responseCount+1) + 
+					` / ` + numRequiredAccounts);
+				if (responseCount == requestCount) {
+					console.log();
+					cb(null, result);
+				}
+			}
+		}));
+	}
+	if (requestCount > 0) {
+		batch.execute();
+	} else {
+		console.log();
+		cb(null, result);
+	}
+}
+
 function confirmTransactions(result, cb) {
 	let stdout = process.stdout;
 	let web3 = result.web3;
@@ -190,7 +294,10 @@ function start() {
 		initWeb3RPCTimeout,
 		extendWeb3,
 		createAccounts,
-		unlockAccounts
+		unlockAccounts,
+		getAccountBalances,
+		collectFunds,
+		fundAccounts
 	);
 	
 	let seqRun = async.seq(
