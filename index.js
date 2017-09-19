@@ -1,6 +1,5 @@
 var async = require('async')
-var Web3RPC = require('web3quorum')
-var Web3Admin = require('web3admin')
+var initWeb3 = require('./initWeb3.js');
 var config = require('./config.js')
 
 var sentTxHashes = [];
@@ -12,35 +11,6 @@ var numQueryErrors = 0;
 var actualTxElapsedTime = 0;
 var actualQueryElapsedTime = 0;
 
-function initWeb3RPC(result, cb) {
-	let host = config.web3RPCHost;
-	let port = config.web3RPCPort;
-	let httpProvider = Web3RPC.providers.HttpProvider;
-	result.web3 = new Web3RPC(new httpProvider("http://" + host + ":" + port));
-	result.web3.eth.getBlockNumber(function(err, res) {
-		console.log("[INFO] Web3 RPC initialized: Connected to " + host + ":" + port);
-		cb(null, result);
-	});
-}
-
-function initWeb3RPCTimeout(result, cb) {
-	let wrappedInitWeb3RPC = async.timeout(initWeb3RPC, config.web3RPCInitTimeoutMillis);
-	wrappedInitWeb3RPC(result, function (err, res) {
-		if (err) { 
-			console.log("[ERROR] Failed to initialize Web3 RPC: timeout");
-			cb(err, null);
-		} else { 
-			cb(null, result);
-		}
-	});
-}
-
-function extendWeb3(result, cb) {
-	setTimeout(function() {
-		Web3Admin.extend(result.web3);
-	}, 1000);
-	cb(null, result);
-}
 
 function listAccounts(result, cb) {
 	console.log(result.web3.eth.accounts);
@@ -369,8 +339,8 @@ function queryBlockchain(result, cb) {
 
 function start() {
 	let seqInit = async.seq(
-		initWeb3RPCTimeout,
-		extendWeb3,
+		initWeb3.RPCTimeout,
+		initWeb3.extendWeb3,
 		createAccounts,
 		unlockAccounts,
 		getAccountBalances,
