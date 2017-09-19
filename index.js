@@ -57,7 +57,8 @@ function createAccounts(result, cb) {
 		}, function(callback) {
 			web3.personal.newAccount("", function(err, res) {
 				numCurrentAccounts++;
-				stdout.write(`\r[INFO] Creating accounts: ` + numCurrentAccounts + ` / ` + numRequiredAccounts);
+				stdout.write(`\r[INFO] Creating accounts: ` + numCurrentAccounts + 
+					` / ` + numRequiredAccounts);
 				callback(err, res);
 			});
 		}, function(err) {
@@ -83,11 +84,14 @@ function unlockAccounts(result, cb) {
 	let requiredAccounts = web3.eth.accounts.slice(0, numRequiredAccounts);
 	let numUnlockedAccounts = 0;
 	
-	stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + ` / ` + numRequiredAccounts);
-	async.eachLimit(requiredAccounts, config.accountUnlockThreadLimit, function(account, callback) {
+	stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
+		` / ` + numRequiredAccounts);
+	async.eachLimit(requiredAccounts, config.accountUnlockThreadLimit, 
+	function(account, callback) {
 		web3.personal.unlockAccount(account, "", 100000, function(err, res) {
 			numUnlockedAccounts++;
-			stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + ` / ` + numRequiredAccounts);
+			stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
+				` / ` + numRequiredAccounts);
 			callback(err, res);
 		});			
 	}, function(err) {
@@ -112,10 +116,14 @@ function confirmTransactions(result, cb) {
 			responseCount++;
 			if (err) { console.log("ERROR", err); }
 			if (!((res == undefined) || (res.blockNumber == null))) { numConfirmedTransactions++; }
-			stdout.write(`\r[INFO] Errors: ` + numSendErrors + `, Failed: ` + (responseCount-numConfirmedTransactions)+ `, Confirmed: ` + numConfirmedTransactions + ` / ` + numSubmittedTransactions);
+			stdout.write(`\r[INFO] Errors: ` + numSendErrors + `, Failed: ` + 
+				(responseCount-numConfirmedTransactions)+ `, Confirmed: ` + 
+				numConfirmedTransactions + ` / ` + numSubmittedTransactions);
 			if (responseCount == requestCount) {
 				console.log();
-				console.log("[INFO] Actual (average) tx rate: " + numConfirmedTransactions/(actualElapsedTime/1000) + " / s over " + (actualElapsedTime/1000) + " s");
+				console.log("[INFO] Actual tx rate: " + 
+					numConfirmedTransactions/(actualElapsedTime/1000) + 
+					" / s averaged over " + (actualElapsedTime/1000) + " s");
 				cb(null, result);
 			}
 			callback(err, res);
@@ -170,7 +178,8 @@ function sendTransactions(result, cb) {
 			batch.execute();
 			numSubmittedTransactions = batchCount*numRequiredAccounts;
 			if (batchCount % txRatePerAccount === 0) {
-				stdout.write(`\r[INFO] Submitted ` + numSubmittedTransactions + ` transactions at ` + totalTxRate + ` / s`);
+				stdout.write(`\r[INFO] Submitted ` + numSubmittedTransactions + 
+					` transactions at ` + totalTxRate + ` / s`);
 			}
 		}
 	}, timeBetweenBatches);	
