@@ -2,25 +2,18 @@ var async = require('async');
 var init = require('./init.js');
 var config = require('./config.js');
 var accounts = require('./accounts.js');
-
-var sentTxHashes = [];
-var numSubmittedTransaction = 0;
-var numSendErrors = 0;
-var numQueryErrors = 0;
-var actualTxElapsedTime = 0;
-var actualQueryElapsedTime = 0;
+var gl = require('./global.js');
 
 function confirmTransactions(result, cb) {
 	let stdout = process.stdout;
 	let web3 = result.web3;
-	let numConfirmedTransactions = 0;	
 	let responseCount = 0;
 	let requestCount = 0;
 
 	function displayProgress() {
-		stdout.write(`\r[INFO] Errors: ` + numSendErrors + `, Failed: ` + 
-			(responseCount-numConfirmedTransactions) + `, Confirmed: ` + 
-			numConfirmedTransactions + ` / ` + numSubmittedTransactions);
+		stdout.write(`\r[INFO] Errors: ` + gl.NumSendErrors + `, Failed: ` + 
+			(responseCount-gl.NumConfirmedTransactions) + `, Confirmed: ` + 
+			gl.NumConfirmedTransactions + ` / ` + gl.NumSubmittedTransactions);
 	}
 
 	function handleTransactionReceiptResponse(err, res) {
@@ -29,7 +22,7 @@ function confirmTransactions(result, cb) {
 		let isConfirmed = !((res == undefined) || (res.blockNumber == null));
 		if (isConfirmed) 
 		{
-			numConfirmedTransactions++; 
+			gl.NumConfirmedTransactions++; 
 		}
 		displayProgress();
 		if (responseCount == requestCount) {
@@ -38,7 +31,7 @@ function confirmTransactions(result, cb) {
 		}
 	}
 
-	async.eachLimit(sentTxHashes, 25, function(txHash, callback) {
+	async.eachLimit(gl.SentTxHashes, 25, function(txHash, callback) {
 		requestCount++;
 		web3.eth.getTransactionReceipt(txHash, function(err, res) {
 			handleTransactionReceiptResponse(err, res);
@@ -69,12 +62,12 @@ function sendTransactions(result, cb) {
 
 	function displaySummary() {
 		console.log("[INFO] Actual tx rate: " + 
-			numSubmittedTransactions/(actualTxElapsedTime/1000) + 
-			" / s averaged over " + (actualTxElapsedTime/1000) + " s");
+			gl.NumSubmittedTransactions/(gl.ActualTxElapsedTime/1000) + 
+			" / s averaged over " + (gl.ActualTxElapsedTime/1000) + " s");
 	}
 
 	function displayProgress() {
-		stdout.write(`\r[INFO] Submitted ` + numSubmittedTransactions + 
+		stdout.write(`\r[INFO] Submitted ` + gl.NumSubmittedTransactions + 
 			` transactions at ` + totalTxRate + ` / s`);
 	}
 
@@ -83,11 +76,11 @@ function sendTransactions(result, cb) {
 		responseCount++;
 		prevTime = currentTime;
 		currentTime = (new Date()).getTime();
-		actualTxElapsedTime += currentTime - prevTime;
+		gl.ActualTxElapsedTime += currentTime - prevTime;
 		if(err) { 
-			numSendErrors++;
+			gl.NumSendErrors++;
 		} else {
-			sentTxHashes.push(txHash);
+			gl.SentTxHashes.push(txHash);
 		}
 		if ((elapsedTime >= maxTimeMillis) && (responseCount == requestCount)) {
 			displayProgress();
@@ -112,9 +105,9 @@ function sendTransactions(result, cb) {
 			currentTime = prevTime;
 		}
 		batch.execute();
-		numSubmittedTransactions = batchCount*numRequiredAccounts;
+		gl.NumSubmittedTransactions = batchCount*numRequiredAccounts;
 		if (batchCount % txRatePerAccount === 0) {
-			stdout.write(`\r[INFO] Submitted ` + numSubmittedTransactions + 
+			stdout.write(`\r[INFO] Submitted ` + gl.NumSubmittedTransactions + 
 				` transactions at ` + totalTxRate + ` / s`);
 		}
 	} 
@@ -151,21 +144,21 @@ function queryBlockchain(result, cb) {
 	let currentTime;
 
 	function displayProgress() {
-			stdout.write(`\r[INFO] Submitted ` + numSubmittedQueries + 
+			stdout.write(`\r[INFO] Submitted ` + gl.NumSubmittedQueries + 
 				` queries at ` + totalQueryRate + ` / s`);
 	}
 
 	function displaySummary() {
 		console.log("[INFO] Actual query rate: " + 
-			numSubmittedQueries/(actualQueryElapsedTime/1000) + 
-			" / s averaged over " + (actualQueryElapsedTime/1000) + " s");
+			gl.NumSubmittedQueries/(gl.ActualQueryElapsedTime/1000) + 
+			" / s averaged over " + (gl.ActualQueryElapsedTime/1000) + " s");
 	}
 
 	function handleGetTransactionResponse(err, res) {
 		responseCount++;
 		prevTime = currentTime;
 		currentTime = (new Date()).getTime();
-		actualQueryElapsedTime += currentTime - prevTime;
+		gl.ActualQueryElapsedTime += currentTime - prevTime;
 		if(err) { 
 			numQueryErrors++;
 		}
@@ -183,7 +176,7 @@ function queryBlockchain(result, cb) {
 		for (let i = 0; i < numQueriesPerBatch; i++) {
 			requestCount++;
 			let index = i*numQueriesPerBatch+requestCount-1;
-			batch.add(web3.eth.getTransaction.request(sentTxHashes[index], function(err, res) {
+			batch.add(web3.eth.getTransaction.request(gl.SentTxHashes[index], function(err, res) {
 				handleGetTransactionResponse(err, res);
 			}));
 		}
@@ -192,7 +185,7 @@ function queryBlockchain(result, cb) {
 			currentTime = prevTime;
 		}
 		batch.execute();
-		numSubmittedQueries = batchCount*numQueriesPerBatch;
+		gl.NumSubmittedQueries = batchCount*numQueriesPerBatch;
 		if (batchCount % queryBatchRate === 0) {
 			displayProgress();
 		}
