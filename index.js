@@ -251,8 +251,8 @@ function sendTransactions(result, cb) {
 	let elapsedTime = 0;
 	let responseCount = 0;
 	let requestCount = 0;
-	let prevTime = (new Date()).getTime();
-	let currentTime = (new Date()).getTime();
+	let prevTime;
+	let currentTime;
 
 	let intervalID = setInterval(function() {
 		batchCount++;
@@ -278,6 +278,10 @@ function sendTransactions(result, cb) {
 						cb(null, result);
 					}
 				}));
+			}
+			if (batchCount == 1) {
+				prevTime = (new Date()).getTime();
+				currentTime = prevTime;
 			}
 			batch.execute();
 			numSubmittedTransactions = batchCount*numRequiredAccounts;
