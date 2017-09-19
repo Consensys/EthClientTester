@@ -256,8 +256,8 @@ function sendTransactions(result, cb) {
 
 	let intervalID = setInterval(function() {
 		batchCount++;
-		elapsedTime = batchCount*timeBetweenBatches/1000;
-		if (elapsedTime <= config.maxTime) {
+		elapsedTime = batchCount*timeBetweenBatches;
+		if (elapsedTime <= config.maxTimeMillis) {
 			let batch = web3.createBatch();
 			for (let i = 0; i < numRequiredAccounts; i++) {
 				requestCount++;
@@ -272,7 +272,9 @@ function sendTransactions(result, cb) {
 					} else {
 						sentTxHashes.push(txHash);
 					}
-					if ((elapsedTime >= config.maxTime) && (responseCount == requestCount)) {
+					if ((elapsedTime >= config.maxTimeMillis) && (responseCount == requestCount)) {
+						stdout.write(`\r[INFO] Submitted ` + numSubmittedTransactions + 
+							` transactions at ` + totalTxRate + ` / s`);
 						console.log();
 						clearInterval(intervalID);
 						cb(null, result);
@@ -289,6 +291,10 @@ function sendTransactions(result, cb) {
 				stdout.write(`\r[INFO] Submitted ` + numSubmittedTransactions + 
 					` transactions at ` + totalTxRate + ` / s`);
 			}
+		} else if (timeBetweenBatches > config.maxTimeMillis) {
+			console.log("TX rate not high enough for specified maxTimeMillis! Exiting...");
+			clearInterval(intervalID);
+			cb(null, result);
 		}
 	}, timeBetweenBatches);	
 }
