@@ -1,5 +1,5 @@
 var async = require('async')
-var initWeb3 = require('./initWeb3.js');
+var init = require('./init.js');
 var config = require('./config.js')
 
 var sentTxHashes = [];
@@ -333,8 +333,8 @@ function queryBlockchain(result, cb) {
 
 function start() {
 	let seqInit = async.seq(
-		initWeb3.RPCTimeout,
-		initWeb3.extendWeb3,
+		init.Web3RPCTimeout,
+		init.ExtendWeb3,
 		createAccounts,
 		unlockAccounts,
 		getAccountBalances,

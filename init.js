@@ -3,7 +3,7 @@ var Web3RPC = require('web3quorum')
 var Web3Admin = require('web3admin')
 var config = require('./config.js')
 
-function RPC(result, cb) {
+function web3RPC(result, cb) {
 	let host = config.web3RPCHost;
 	let port = config.web3RPCPort;
 	let httpProvider = Web3RPC.providers.HttpProvider;
@@ -14,9 +14,9 @@ function RPC(result, cb) {
 	});
 }
 
-function RPCTimeout(result, cb) {
-	let wrappedRPC = async.timeout(RPC, config.web3RPCInitTimeoutMillis);
-	wrappedRPC(result, function (err, res) {
+function web3RPCTimeout(result, cb) {
+	let wrappedWeb3RPC = async.timeout(web3RPC, config.web3RPCInitTimeoutMillis);
+	wrappedWeb3RPC(result, function (err, res) {
 		if (err) { 
 			console.log("[ERROR] Failed to initialize Web3 RPC: timeout");
 			cb(err, null);
@@ -33,5 +33,5 @@ function extendWeb3(result, cb) {
 	cb(null, result);
 }
 
-exports.RPCTimeout = RPCTimeout;
-exports.extendWeb3 = extendWeb3;
+exports.Web3RPCTimeout = web3RPCTimeout;
+exports.ExtendWeb3 = extendWeb3;
