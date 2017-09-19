@@ -125,7 +125,7 @@ function getAccountBalances(result, cb) {
 				accountBalances[existingAccounts.indexOf(account)] = res.toNumber(); 
 				totalBalance += res.toNumber();
 			}
-			stdout.write(`\r[INFO] Account balances retrieved: ` + responseCount + 
+			stdout.write(`\r[INFO] Getting account balances: ` + responseCount + 
 				` / ` + numExistingAccounts);
 			if (responseCount == requestCount) {
 				console.log();
@@ -154,7 +154,7 @@ function collectFunds(result, cb) {
 				if(err) { 
 					cb(err, null);
 				} else {
-					stdout.write(`\r[INFO] Funds collected: ` + responseCount + 
+					stdout.write(`\r[INFO] Collecting funds: ` + responseCount + 
 						` / ` + requestCount);
 					if (responseCount == requestCount) {
 						console.log();
@@ -193,7 +193,7 @@ function fundAccounts(result, cb) {
 			if(err) { 
 				cb(err, null);
 			} else {
-				stdout.write(`\r[INFO] Accounts funded: ` + (responseCount+1) + 
+				stdout.write(`\r[INFO] Funding Accounts: ` + (responseCount+1) + 
 					` / ` + numRequiredAccounts);
 				if (responseCount == requestCount) {
 					console.log();
