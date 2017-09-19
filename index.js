@@ -16,19 +16,32 @@ function confirmTransactions(result, cb) {
 	let numConfirmedTransactions = 0;	
 	let responseCount = 0;
 	let requestCount = 0;
+
+	function displayProgress() {
+		stdout.write(`\r[INFO] Errors: ` + numSendErrors + `, Failed: ` + 
+			(responseCount-numConfirmedTransactions) + `, Confirmed: ` + 
+			numConfirmedTransactions + ` / ` + numSubmittedTransactions);
+	}
+
+	function handleTransactionReceiptResponse(err, res) {
+		responseCount++;
+		if (err) { console.log("ERROR", err); }
+		let isConfirmed = !((res == undefined) || (res.blockNumber == null));
+		if (isConfirmed) 
+		{
+			numConfirmedTransactions++; 
+		}
+		displayProgress();
+		if (responseCount == requestCount) {
+			console.log();
+			cb(null, result);
+		}
+	}
+
 	async.eachLimit(sentTxHashes, 25, function(txHash, callback) {
 		requestCount++;
 		web3.eth.getTransactionReceipt(txHash, function(err, res) {
-			responseCount++;
-			if (err) { console.log("ERROR", err); }
-			if (!((res == undefined) || (res.blockNumber == null))) { numConfirmedTransactions++; }
-			stdout.write(`\r[INFO] Errors: ` + numSendErrors + `, Failed: ` + 
-				(responseCount-numConfirmedTransactions)+ `, Confirmed: ` + 
-				numConfirmedTransactions + ` / ` + numSubmittedTransactions);
-			if (responseCount == requestCount) {
-				console.log();
-				cb(null, result);
-			}
+			handleTransactionReceiptResponse(err, res);
 			callback(err, res);
 		});
 	}, function (err) {
@@ -54,46 +67,63 @@ function sendTransactions(result, cb) {
 	let prevTime;
 	let currentTime;
 
+	function displaySummary() {
+		console.log("[INFO] Actual tx rate: " + 
+			numSubmittedTransactions/(actualTxElapsedTime/1000) + 
+			" / s averaged over " + (actualTxElapsedTime/1000) + " s");
+	}
+
+	function displayProgress() {
+		stdout.write(`\r[INFO] Submitted ` + numSubmittedTransactions + 
+			` transactions at ` + totalTxRate + ` / s`);
+	}
+
+	function handleSendTransactionResponse(err, res) {
+		let txHash = res;
+		responseCount++;
+		prevTime = currentTime;
+		currentTime = (new Date()).getTime();
+		actualTxElapsedTime += currentTime - prevTime;
+		if(err) { 
+			numSendErrors++;
+		} else {
+			sentTxHashes.push(txHash);
+		}
+		if ((elapsedTime >= maxTimeMillis) && (responseCount == requestCount)) {
+			displayProgress();
+			console.log();
+			displaySummary();
+			clearInterval(intervalID);
+			cb(null, result);
+		}
+	}
+
+	function createAndExecuteBatch() {
+		let batch = web3.createBatch();
+		for (let i = 0; i < numRequiredAccounts; i++) {
+			requestCount++;
+			let tx = { from: addresses[i], to: addresses[i], value: txValue };
+			batch.add(web3.eth.sendTransaction.request(tx, function(err, res) {
+				handleSendTransactionResponse(err, res);
+			}));
+		}
+		if (batchCount == 1) {
+			prevTime = (new Date()).getTime();
+			currentTime = prevTime;
+		}
+		batch.execute();
+		numSubmittedTransactions = batchCount*numRequiredAccounts;
+		if (batchCount % txRatePerAccount === 0) {
+			stdout.write(`\r[INFO] Submitted ` + numSubmittedTransactions + 
+				` transactions at ` + totalTxRate + ` / s`);
+		}
+	} 
+
 	let intervalID = setInterval(function() {
 		batchCount++;
 		elapsedTime = batchCount*timeBetweenBatches;
 		if (elapsedTime <= maxTimeMillis) {
-			let batch = web3.createBatch();
-			for (let i = 0; i < numRequiredAccounts; i++) {
-				requestCount++;
-				let tx = { from: addresses[i], to: addresses[i], value: txValue };
-				batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
-					responseCount++;
-					prevTime = currentTime;
-					currentTime = (new Date()).getTime();
-					actualTxElapsedTime += currentTime - prevTime;
-					if(err) { 
-						numSendErrors++;
-					} else {
-						sentTxHashes.push(txHash);
-					}
-					if ((elapsedTime >= maxTimeMillis) && (responseCount == requestCount)) {
-						stdout.write(`\r[INFO] Submitted ` + numSubmittedTransactions + 
-							` transactions at ` + totalTxRate + ` / s`);
-						console.log();
-						console.log("[INFO] Actual tx rate: " + 
-							numSubmittedTransactions/(actualTxElapsedTime/1000) + 
-							" / s averaged over " + (actualTxElapsedTime/1000) + " s");
-						clearInterval(intervalID);
-						cb(null, result);
-					}
-				}));
-			}
-			if (batchCount == 1) {
-				prevTime = (new Date()).getTime();
-				currentTime = prevTime;
-			}
-			batch.execute();
-			numSubmittedTransactions = batchCount*numRequiredAccounts;
-			if (batchCount % txRatePerAccount === 0) {
-				stdout.write(`\r[INFO] Submitted ` + numSubmittedTransactions + 
-					` transactions at ` + totalTxRate + ` / s`);
-			}
+			createAndExecuteBatch();
 		} else if (timeBetweenBatches > maxTimeMillis) {
 			console.log("TX rate not high enough for specified maxTimeMillis! Exiting...");
 			clearInterval(intervalID);
@@ -120,45 +150,59 @@ function queryBlockchain(result, cb) {
 	let prevTime;
 	let currentTime;
 
+	function displayProgress() {
+			stdout.write(`\r[INFO] Submitted ` + numSubmittedQueries + 
+				` queries at ` + totalQueryRate + ` / s`);
+	}
+
+	function displaySummary() {
+		console.log("[INFO] Actual query rate: " + 
+			numSubmittedQueries/(actualQueryElapsedTime/1000) + 
+			" / s averaged over " + (actualQueryElapsedTime/1000) + " s");
+	}
+
+	function handleGetTransactionResponse(err, res) {
+		responseCount++;
+		prevTime = currentTime;
+		currentTime = (new Date()).getTime();
+		actualQueryElapsedTime += currentTime - prevTime;
+		if(err) { 
+			numQueryErrors++;
+		}
+		if ((elapsedTime >= maxTimeMillis) && (responseCount == requestCount)) {
+			displayProgress();
+			console.log();
+			displaySummary();
+			clearInterval(intervalID);
+			cb(null, result);
+		}
+	}
+
+	function createAndExecuteBatch() {
+		let batch = web3.createBatch();
+		for (let i = 0; i < numQueriesPerBatch; i++) {
+			requestCount++;
+			let index = i*numQueriesPerBatch+requestCount-1;
+			batch.add(web3.eth.getTransaction.request(sentTxHashes[index], function(err, res) {
+				handleGetTransactionResponse(err, res);
+			}));
+		}
+		if (batchCount == 1) {
+			prevTime = (new Date()).getTime();
+			currentTime = prevTime;
+		}
+		batch.execute();
+		numSubmittedQueries = batchCount*numQueriesPerBatch;
+		if (batchCount % queryBatchRate === 0) {
+			displayProgress();
+		}
+	}
+
 	let intervalID = setInterval(function() {
 		batchCount++;
 		elapsedTime = batchCount*timeBetweenBatches;
 		if (elapsedTime <= maxTimeMillis) {
-			let batch = web3.createBatch();
-			for (let i = 0; i < numQueriesPerBatch; i++) {
-				requestCount++;
-				batch.add(web3.eth.getTransaction.request(sentTxHashes[i*numQueriesPerBatch+requestCount-1], function(err, res) {
-					responseCount++;
-					prevTime = currentTime;
-					currentTime = (new Date()).getTime();
-					actualQueryElapsedTime += currentTime - prevTime;
-					if(err) { 
-						numQueryErrors++;
-					} else {
-						//sentTxHashes.push(txHash);
-					}
-					if ((elapsedTime >= maxTimeMillis) && (responseCount == requestCount)) {
-						stdout.write(`\r[INFO] Submitted ` + numSubmittedQueries + 
-							` queries at ` + totalQueryRate + ` / s`);
-						console.log();
-						console.log("[INFO] Actual query rate: " + 
-							numSubmittedQueries/(actualQueryElapsedTime/1000) + 
-							" / s averaged over " + (actualQueryElapsedTime/1000) + " s");
-						clearInterval(intervalID);
-						cb(null, result);
-					}
-				}));
-			}
-			if (batchCount == 1) {
-				prevTime = (new Date()).getTime();
-				currentTime = prevTime;
-			}
-			batch.execute();
-			numSubmittedQueries = batchCount*numQueriesPerBatch;
-			if (batchCount % queryBatchRate === 0) {
-				stdout.write(`\r[INFO] Submitted ` + numSubmittedQueries + 
-					` queries at ` + totalQueryRate + ` / s`);
-			}
+			createAndExecuteBatch();
 		} else if (timeBetweenBatches > maxTimeMillis) {
 			console.log("Query rate not high enough for specified maxTimeMillis! Exiting...");
 			clearInterval(intervalID);
@@ -180,7 +224,8 @@ function start() {
 	
 	let seqRun = async.seq(
 		sendTransactions,
-		queryBlockchain
+		queryBlockchain,
+		confirmTransactions
 	);
 
 	let result = {};
