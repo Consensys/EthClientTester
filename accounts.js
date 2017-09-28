@@ -65,7 +65,66 @@ function unlock(result, cb) {
   });
 }
 
+function unlockAll(result, cb) {
+  let stdout = process.stdout;
+  let web3 = result.web3;
+  let numExistingAccounts = web3.eth.accounts.length;
+  let existingAccounts = web3.eth.accounts;
+  let numUnlockedAccounts = 0;
+  
+  stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
+    ` / ` + numExistingAccounts);
+  async.eachLimit(existingAccounts, config.accountUnlockThreadLimit, 
+  function(account, callback) {
+    web3.personal.unlockAccount(account, "", 100000, function(err, res) {
+      numUnlockedAccounts++;
+      stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
+        ` / ` + numExistingAccounts);
+      callback(err, res);
+    });     
+  }, function(err) {
+    if (err) {
+      cb(err, null);
+    } else {
+      console.log();
+      cb(null, result);
+    }
+  });
+}
+  
 function getBalances(result, cb) {
+  let stdout = process.stdout;
+  let web3 = result.web3;
+  let numExistingAccounts = web3.eth.accounts.length;
+  let existingAccounts = web3.eth.accounts;
+  let txOptions = config.txOptions;
+  let numRequiredAccounts = txOptions.numAccounts;
+  let requiredAccounts = web3.eth.accounts.slice(0, numRequiredAccounts);
+  let responseCount = 0;
+  let requestCount = 0;
+  async.eachLimit(requiredAccounts, 5, function(account, callback) {
+    requestCount++;
+    web3.eth.getBalance(account, function(err, res) {
+      if (err) { 
+        console.log("ERROR", err); 
+      } else { 
+        responseCount++;
+        balances[existingAccounts.indexOf(account)] = res.toNumber(); 
+        totalBalance += res.toNumber();
+      }
+      stdout.write(`\r[INFO] Getting account balances: ` + responseCount + 
+        ` / ` + numRequiredAccounts);
+      if (responseCount == requestCount) {
+        console.log();
+        cb(null, result);
+      }
+      callback(err, res);
+    });
+  }, function (err) {
+  });
+}
+
+function getAllBalances(result, cb) {
   let stdout = process.stdout;
   let web3 = result.web3;
   let numExistingAccounts = web3.eth.accounts.length;
@@ -95,6 +154,43 @@ function getBalances(result, cb) {
 }
 
 function collectFunds(result, cb) {
+  let stdout = process.stdout;
+  let web3 = result.web3;
+  let numExistingAccounts = web3.eth.accounts.length;
+  let existingAccounts = web3.eth.accounts;
+  let txOptions = config.txOptions;
+  let numRequiredAccounts = txOptions.numAccounts;
+  let requiredAccounts = web3.eth.accounts.slice(0, numRequiredAccounts);
+  let responseCount = 0;
+  let requestCount = 0;
+  let batch = web3.createBatch();
+  for (let i = 1; i < numRequiredAccounts; i++) {
+    if (balances[i] > 0) {
+      requestCount++;
+      let tx = {from: requiredAccounts[i], to: requiredAccounts[0], value: balances[i]};
+      batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
+        responseCount++;
+        if(err) { 
+          cb(err, null);
+        } else {
+          stdout.write(`\r[INFO] Collecting funds: ` + responseCount + 
+            ` / ` + requestCount);
+          if (responseCount == requestCount) {
+            console.log();
+            cb(null, result);
+          }
+        }
+      }));
+    }
+  }
+  if (requestCount > 0) {
+    batch.execute();
+  } else {
+    cb(null, result);
+  }
+}
+
+function collectAllFunds(result, cb) {
   let stdout = process.stdout;
   let web3 = result.web3;
   let numExistingAccounts = web3.eth.accounts.length;
@@ -172,6 +268,9 @@ exports.TotalBalance = totalBalance;
 
 exports.Create = create;
 exports.Unlock = unlock;
+exports.UnlockAll = unlockAll;
 exports.GetBalances = getBalances;
+exports.GetAllBalances = getAllBalances;
 exports.CollectFunds = collectFunds;
+exports.CollectAllFunds = collectAllFunds;
 exports.DistributeFunds = distributeFunds;
