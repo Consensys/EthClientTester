@@ -1,7 +1,5 @@
 var async = require('async');
-var gl = require('./global.js');
 var init = require('./init.js');
-var config = require('./config.js');
 var accounts = require('./accounts.js');
 var transactions = require('./transactions.js');
 var blockchain = require('./blockchain.js');

@@ -1,5 +1,5 @@
 var async = require('async');
-var gl = require('./global.js');
+var metrics = require('./metrics.js');
 var config = require('./config.js');
 
 function sendTransactions(result, cb) {
@@ -23,12 +23,12 @@ function sendTransactions(result, cb) {
 
   function displaySummary() {
     console.log("[INFO] Actual tx rate: " + 
-      gl.NumSubmittedTransactions/(gl.ActualTxElapsedTime/1000) + 
-      " / s averaged over " + (gl.ActualTxElapsedTime/1000) + " s");
+      metrics.NumSubmittedTransactions/(metrics.ActualTxElapsedTime/1000) + 
+      " / s averaged over " + (metrics.ActualTxElapsedTime/1000) + " s");
   }
 
   function displayProgress() {
-    stdout.write(`\r[INFO] Submitted ` + gl.NumSubmittedTransactions + 
+    stdout.write(`\r[INFO] Submitted ` + metrics.NumSubmittedTransactions + 
       ` transactions at ` + totalTxRate + ` / s`);
   }
 
@@ -37,11 +37,11 @@ function sendTransactions(result, cb) {
     responseCount++;
     prevTime = currentTime;
     currentTime = (new Date()).getTime();
-    gl.ActualTxElapsedTime += currentTime - prevTime;
+    metrics.ActualTxElapsedTime += currentTime - prevTime;
     if(err) { 
-      gl.NumSendErrors++;
+      metrics.NumSendErrors++;
     } else {
-      gl.SentTxHashes.push(txHash);
+      metrics.SentTxHashes.push(txHash);
     }
     if ((elapsedTime >= maxTimeMillis) && (responseCount == requestCount)) {
       displayProgress();
@@ -66,9 +66,9 @@ function sendTransactions(result, cb) {
       currentTime = prevTime;
     }
     batch.execute();
-    gl.NumSubmittedTransactions = batchCount*numRequiredAccounts;
+    metrics.NumSubmittedTransactions = batchCount*numRequiredAccounts;
     if (batchCount % txRatePerAccount === 0) {
-      stdout.write(`\r[INFO] Submitted ` + gl.NumSubmittedTransactions + 
+      stdout.write(`\r[INFO] Submitted ` + metrics.NumSubmittedTransactions + 
         ` transactions at ` + totalTxRate + ` / s`);
     }
   } 
@@ -93,9 +93,9 @@ function confirmTransactions(result, cb) {
   let requestCount = 0;
 
   function displayProgress() {
-    stdout.write(`\r[INFO] Errors: ` + gl.NumSendErrors + `, Failed: ` + 
-      (responseCount-gl.NumConfirmedTransactions) + `, Confirmed: ` + 
-      gl.NumConfirmedTransactions + ` / ` + gl.NumSubmittedTransactions);
+    stdout.write(`\r[INFO] Errors: ` + metrics.NumSendErrors + `, Failed: ` + 
+      (responseCount-metrics.NumConfirmedTransactions) + `, Confirmed: ` + 
+      metrics.NumConfirmedTransactions + ` / ` + metrics.NumSubmittedTransactions);
   }
 
   function handleTransactionReceiptResponse(err, res) {
@@ -104,7 +104,7 @@ function confirmTransactions(result, cb) {
     let isConfirmed = !((res == undefined) || (res.blockNumber == null));
     if (isConfirmed) 
     {
-      gl.NumConfirmedTransactions++; 
+      metrics.NumConfirmedTransactions++; 
     }
     displayProgress();
     if (responseCount == requestCount) {
@@ -113,7 +113,7 @@ function confirmTransactions(result, cb) {
     }
   }
 
-  async.eachLimit(gl.SentTxHashes, 25, function(txHash, callback) {
+  async.eachLimit(metrics.SentTxHashes, 25, function(txHash, callback) {
     requestCount++;
     web3.eth.getTransactionReceipt(txHash, function(err, res) {
       handleTransactionReceiptResponse(err, res);
