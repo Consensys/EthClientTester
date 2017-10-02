@@ -22,7 +22,7 @@ config.txOptions = {
   txRatePerAccount: 10,                 // transaction rate per account per second
   numAccounts: 1,                       // number of accounts
   value: 10,
-  maxTimeMillis: 12*60*60*1000                    // amount of time to send the transactions for
+  maxTimeMillis: 10*1000                    // amount of time to send the transactions for
 };
 
 config.queryOptions = {

@@ -16,9 +16,9 @@ function run() {
   );
   
   let seqRun = async.seq(
-    transactions.Send
+    transactions.Send,
     //blockchain.Query,
-    //transactions.Confirm
+    transactions.Confirm
   );
 
   let result = {};
