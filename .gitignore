@@ -41,6 +41,7 @@ package-lock.json
 # Vim swap files
 *.swp
 *.swo
+*.swn
 	
 # xmlhttprequest
 .node-xmlhttprequest-sync-*

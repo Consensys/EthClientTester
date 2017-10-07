@@ -19,8 +19,8 @@ config.web3RPCPort = "20010"
     at a rate of <txRatePerAccount> batches per second.
 */
 config.txOptions = {
-  txRatePerAccount: 10,                 // transaction rate per account per second
-  numAccounts: 1,                       // number of accounts
+  txRatePerAccount: 1,                 // transaction rate per account per second
+  numAccounts: 5,                       // number of accounts
   value: 10,
   maxTimeMillis: 10*1000                    // amount of time to send the transactions for
 };
@@ -30,6 +30,26 @@ config.queryOptions = {
   numQueriesPerBatch: 1,                // number of queries per batch
   maxTimeMillis: 5000                   // amount of time to send the queries for
 };
+
+config.contractDataArray = [{
+  relativeSourcePath: './contracts/ERC20.sol', // path to the solidity contract source code
+  contractName: 'ERC20',               // name of the contract
+  contractOwnerIndex: 0                // index of the contract owner in web3.eth.accounts
+  }
+  //{
+  //relativeSourcePath: './contracts/ERC20.sol', // path to the solidity contract source code
+  //contractName: 'ERC20',               // name of the contract
+  //contractOwnerIndex: 1                // index of the contract owner in web3.eth.accounts
+  //}, {
+  //relativeSourcePath: './contracts/ERC20.sol', // path to the solidity contract source code
+  //contractName: 'ERC20',               // name of the contract
+  //contractOwnerIndex: 2                // index of the contract owner in web3.eth.accounts
+  //}, {
+  //relativeSourcePath: './contracts/ERC20.sol', // path to the solidity contract source code
+  //contractName: 'ERC20',               // name of the contract
+  //contractOwnerIndex: 3                // index of the contract owner in web3.eth.accounts
+  //}
+];
 
 config.web3RPCInitTimeoutMillis = 5000; // exits with error if it takes longer than this
 config.accountUnlockThreadLimit = 5;    // number of concurrent threads limited to this

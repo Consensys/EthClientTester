@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "async": "^2.5.0",
+    "solc": "^0.4.17",
     "web3_ipc": "^1.4.0",
     "web3admin": "^0.4.4",
     "web3quorum": "^0.20.3"
