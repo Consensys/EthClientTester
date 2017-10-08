@@ -10,15 +10,15 @@ function run() {
     init.Web3RPCTimeout,
     init.ExtendWeb3,
     accounts.Create,
-    accounts.Unlock
+    accounts.Unlock,
     //accounts.GetBalances,
     //accounts.CollectFunds,
     //accounts.DistributeFunds
+    contracts.DeployContracts
   );
   
   let seqRun = async.seq(
-    contracts.DeployContracts
-    //transactions.Send,
+    //transactions.Send
     //blockchain.Query,
     //transactions.Confirm
   );
@@ -33,7 +33,7 @@ function run() {
         if (err) { 
           console.log("ERROR", err) 
         } else {
-          console.log(contracts.DeployedContracts[0]);
+          //console.log(contracts.DeployedContracts[0]);
           //console.log(contracts.DeployedContracts[0].balanceOf(result.web3.eth.accounts[0]).toNumber());
           //console.log(contracts.DeployedContracts[1].balanceOf(result.web3.eth.accounts[1]).toNumber());
           //console.log(contracts.DeployedContracts[2].balanceOf(result.web3.eth.accounts[2]).toNumber());

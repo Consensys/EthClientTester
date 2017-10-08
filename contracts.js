@@ -1,12 +1,12 @@
 var async = require('async');
 var fs = require('fs');
 var solc = require('solc');
-var config = require('./config.js');
 
 var deployedContracts = [];
 var numContractsDeployed = 0;
 
 function deployContracts(result, cb) {
+  let config = require('./config.js');
   let stdout = process.stdout;
   let web3 = result.web3;
   let contractDataArray = config.contractDataArray;
@@ -68,7 +68,7 @@ function deployContracts(result, cb) {
       }
     });
   }
- 
+
   async.eachLimit(contractDataArray, 1, function(contractData, callback) {
     displayProgress();
     let compiledContract = compile(contractData);
@@ -79,5 +79,18 @@ function deployContracts(result, cb) {
   });  
 }
 
+function buildContractObject(contractInfo, contractOwnerIndex) {
+  let contractObject = {};
+  contractObject.relativeSourcePath = contractInfo.RelativeSourcePath;
+  contractObject.contractName = contractInfo.ContractName;
+  if (contractOwnerIndex) {
+    contractObject.contractOwnerIndex = contractOwnerIndex;
+  } else {
+    contractObject.contractOwnerIndex = 0;
+  }
+  return contractObject;
+}
+
 exports.DeployedContracts = deployedContracts;
 exports.DeployContracts = deployContracts;
+exports.BuildContractObject = buildContractObject;

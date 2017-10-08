@@ -1,3 +1,6 @@
+var contracts = require('./contracts.js');
+var ERC20 = require('./contracts/ERC20.js');
+
 var config = {}
 
 config.web3RPCHost = "52.233.193.115"     //Raft4
@@ -31,24 +34,9 @@ config.queryOptions = {
   maxTimeMillis: 5000                   // amount of time to send the queries for
 };
 
-config.contractDataArray = [{
-  relativeSourcePath: './contracts/ERC20.sol', // path to the solidity contract source code
-  contractName: 'ERC20',               // name of the contract
-  contractOwnerIndex: 0                // index of the contract owner in web3.eth.accounts
-  }
-  //{
-  //relativeSourcePath: './contracts/ERC20.sol', // path to the solidity contract source code
-  //contractName: 'ERC20',               // name of the contract
-  //contractOwnerIndex: 1                // index of the contract owner in web3.eth.accounts
-  //}, {
-  //relativeSourcePath: './contracts/ERC20.sol', // path to the solidity contract source code
-  //contractName: 'ERC20',               // name of the contract
-  //contractOwnerIndex: 2                // index of the contract owner in web3.eth.accounts
-  //}, {
-  //relativeSourcePath: './contracts/ERC20.sol', // path to the solidity contract source code
-  //contractName: 'ERC20',               // name of the contract
-  //contractOwnerIndex: 3                // index of the contract owner in web3.eth.accounts
-  //}
+config.contractDataArray = [
+  contracts.BuildContractObject(ERC20, 0),
+  contracts.BuildContractObject(ERC20, 1)
 ];
 
 config.web3RPCInitTimeoutMillis = 5000; // exits with error if it takes longer than this
