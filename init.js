@@ -1,6 +1,9 @@
 var async = require('async')
 var Web3RPC = require('web3quorum')
 var Web3Admin = require('web3admin')
+var accounts = require('./accounts.js');
+var contracts = require('./contracts.js');
+var run = require('./run.js');
 var config = require('./config.js')
 
 function web3RPC(result, cb) {

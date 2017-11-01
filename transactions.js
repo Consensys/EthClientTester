@@ -1,54 +1,50 @@
 var async = require('async');
 var metrics = require('./metrics.js');
+var accounts = require('./accounts.js');
 var config = require('./config.js');
 
-function sendTransactions(result, cb) {
+var numSendErrors = 0;
+var numConfirmedTransactions = 0;
+var sentTxHashes = [];
+
+function sendBatch(result, cb) {
   let stdout = process.stdout;
   let web3 = result.web3;
-  let addresses = web3.eth.accounts;
-  let txOptions = config.txOptions;
-  let txValue = txOptions.value;
-  let maxTimeMillis = txOptions.maxTimeMillis;
-  let txRatePerAccount = txOptions.txRatePerAccount;
-  let numRequiredAccounts = txOptions.numAccounts;
-  let timeBetweenBatches = Math.round(1000/txRatePerAccount);
-  let totalTxRate = txRatePerAccount*numRequiredAccounts;
-
-  let batchCount = 0;
-  let elapsedTime = 0;
-  let responseCount = 0;
+  let txOptions = result.txOptions;
+  let numRequiredAccounts = txOptions.numBatchTransactions;
+  let doAccountCreation = config.doAccountCreation;
+  let doAccountUnlocking = config.doAccountUnlocking;
+  let txValue = txOptions.txValue;
   let requestCount = 0;
-  let prevTime;
-  let currentTime;
+  let responseCount = 0;
+  let stopInterval = false;
+  let distributeEther = false;
+  let numBalances = numRequiredAccounts;
+  //initialize a new task list for performing the required setup
+  let tasks = [function(callback) { callback(null, result); }];
 
-  function displaySummary() {
-    console.log("[INFO] Actual tx rate: " + 
-      metrics.NumSubmittedTransactions/(metrics.ActualTxElapsedTime/1000) + 
-      " / s averaged over " + (metrics.ActualTxElapsedTime/1000) + " s");
-  }
+  //settings passed along to the queued functions
+  result.accountOptions = {
+    numRequiredAccounts: numRequiredAccounts,
+    doAccountCreation: doAccountCreation,
+    doAccountUnlocking: doAccountUnlocking
+  };
 
-  function displayProgress() {
-    stdout.write(`\r[INFO] Submitted ` + metrics.NumSubmittedTransactions + 
-      ` transactions at ` + totalTxRate + ` / s`);
-  }
-
-  function handleSendTransactionResponse(err, res) {
+  function handleTransactionResponse(err, res) {
     let txHash = res;
     responseCount++;
-    prevTime = currentTime;
-    currentTime = (new Date()).getTime();
-    metrics.ActualTxElapsedTime += currentTime - prevTime;
     if(err) { 
-      metrics.NumSendErrors++;
+      console.log(err);
+      numSendErrors++;
     } else {
-      metrics.SentTxHashes.push(txHash);
+      sentTxHashes.push(txHash);
     }
-    if ((elapsedTime >= maxTimeMillis) && (responseCount == requestCount)) {
-      displayProgress();
-      console.log();
-      displaySummary();
-      clearInterval(intervalID);
-      cb(null, result);
+    if (responseCount == requestCount) {
+      // signal to the repeater that this task has been completed.
+      if (result.repeater) {
+        result.repeater.completed();
+      }
+      if(cb) { cb(null, result); }
     }
   }
 
@@ -56,34 +52,64 @@ function sendTransactions(result, cb) {
     let batch = web3.createBatch();
     for (let i = 0; i < numRequiredAccounts; i++) {
       requestCount++;
-      let tx = { from: addresses[i], to: addresses[i], value: txValue };
+      let tx = { from: accounts.Unlocked[i], to: accounts.Unlocked[i], value: txValue };
       batch.add(web3.eth.sendTransaction.request(tx, function(err, res) {
-        handleSendTransactionResponse(err, res);
+        handleTransactionResponse(err, res);
       }));
     }
-    if (batchCount == 1) {
-      prevTime = (new Date()).getTime();
-      currentTime = prevTime;
-    }
     batch.execute();
-    metrics.NumSubmittedTransactions = batchCount*numRequiredAccounts;
-    if (batchCount % txRatePerAccount === 0) {
-      stdout.write(`\r[INFO] Submitted ` + metrics.NumSubmittedTransactions + 
-        ` transactions at ` + totalTxRate + ` / s`);
+    if (result.repeater) {
+      result.repeater.displayProgress("Sending Transaction Batch");
     }
-  } 
+  }
 
-  let intervalID = setInterval(function() {
-    batchCount++;
-    elapsedTime = batchCount*timeBetweenBatches;
-    if (elapsedTime <= maxTimeMillis) {
-      createAndExecuteBatch();
-    } else if (timeBetweenBatches > maxTimeMillis) {
-      console.log("TX rate not high enough for specified maxTimeMillis! Exiting...");
-      clearInterval(intervalID);
-      cb(null, result);
+  //create accounts
+  if ((config.doAccountCreation === undefined) || (config.doAccountCreation != false)) {
+    stopInterval = true;
+    tasks.push(accounts.Create);
+  }
+  //unlock accounts
+  if ((config.doAccountUnlocking === undefined) || (config.doAccountUnlocking != false)) {
+    if (accounts.Unlocked.length < numRequiredAccounts) {
+      stopInterval = true;
+      tasks.push(accounts.Unlock);
     }
-  }, timeBetweenBatches); 
+  } else { 
+    if (accounts.Unlocked.length < numRequiredAccounts) {
+      stopInterval = true;
+      /*if not unlocking accounts, it is assumed that all 
+        the needed accounts are already unlocked*/
+      tasks.push(accounts.UpdateRequiredToUnlocked);
+    }
+  }
+  
+  //collect/distribute ether
+  if ((config.doEtherRedistribution === undefined) || (config.doEtherRedistribution != false)) {
+    if (accounts.Existing.length < numRequiredAccounts) {
+      numBalances = accounts.Existing.length;
+    }
+    for (let i = 0; i < numBalances; i++) {
+      if (accounts.Balances[i] < txValue) {
+        distributeEther = true;
+      }
+    }
+    if (distributeEther) {
+      stopInterval = true;
+      tasks.push(accounts.CollectFunds);
+      tasks.push(accounts.DistributeFunds);
+    }
+  }
+
+  //pause (wait) until initialization is completed before resuming
+  if (result.repeater && stopInterval) { result.repeater.pause(); }
+  async.waterfall(tasks, function(err, res) {
+    if (!err) {
+      createAndExecuteBatch();
+      if (result.repeater) { result.repeater.resume(); }
+    } else {
+      cb(err, null);
+    }
+  });
 }
 
 function confirmTransactions(result, cb) {
@@ -92,28 +118,27 @@ function confirmTransactions(result, cb) {
   let responseCount = 0;
   let requestCount = 0;
 
-  function displayProgress() {
-    stdout.write(`\r[INFO] Errors: ` + metrics.NumSendErrors + `, Failed: ` + 
-      (responseCount-metrics.NumConfirmedTransactions) + `, Confirmed: ` + 
-      metrics.NumConfirmedTransactions + ` / ` + metrics.NumSubmittedTransactions);
-  }
-
   function handleTransactionReceiptResponse(err, res) {
     responseCount++;
     if (err) { console.log("ERROR", err); }
     let isConfirmed = !((res == undefined) || (res.blockNumber == null));
     if (isConfirmed) 
     {
-      metrics.NumConfirmedTransactions++; 
+      numConfirmedTransactions++; 
     }
-    displayProgress();
     if (responseCount == requestCount) {
-      console.log();
-      cb(null, result);
+      stdout.write(`\r[INFO] Summary: Errors=` + numSendErrors + `, Failed=` + 
+        (responseCount-numConfirmedTransactions) + `, Confirmed=` + 
+        numConfirmedTransactions + ` out of ` + sentTxHashes.length + `\n`);
+      // signal to the repeater that this task has been completed.
+      if (result.repeater) {
+        result.repeater.completed();
+      }
+      if(cb) { cb(null, result); }
     }
   }
 
-  async.eachLimit(metrics.SentTxHashes, 25, function(txHash, callback) {
+  async.eachLimit(sentTxHashes, 25, function(txHash, callback) {
     requestCount++;
     web3.eth.getTransactionReceipt(txHash, function(err, res) {
       handleTransactionReceiptResponse(err, res);
@@ -123,5 +148,5 @@ function confirmTransactions(result, cb) {
   });
 }
 
-exports.Send = sendTransactions;
+exports.SendBatch = sendBatch;
 exports.Confirm = confirmTransactions;

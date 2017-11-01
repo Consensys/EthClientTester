@@ -2,10 +2,10 @@ var async = require('async');
 var fs = require('fs');
 var solc = require('solc');
 
-var deployedContracts = [];
-var numContractsDeployed = 0;
+var deployed = [];
+var numDeployed = 0;
 
-function deployContracts(result, cb) {
+function deploy(result, cb) {
   let config = require('./config.js');
   let stdout = process.stdout;
   let web3 = result.web3;
@@ -13,15 +13,15 @@ function deployContracts(result, cb) {
 
   function displaySummary() {
     console.log("\r[INFO] Deploying contracts: " + 
-      numContractsDeployed + " / " + contractDataArray.length);
+      numDeployed + " / " + contractDataArray.length);
   }
 
   function displayProgress() {
     stdout.write(`\r[INFO] Deploying contracts: ` + 
-      numContractsDeployed + ` / ` + contractDataArray.length);
+      numDeployed + ` / ` + contractDataArray.length);
   }
 
-  function compile(contractData) {
+  function compileContract(contractData) {
     let relativeSourcePath = contractData.relativeSourcePath;
     let contractName = contractData.contractName;
     let contractOwnerIndex = contractData.contractOwnerIndex;
@@ -45,7 +45,7 @@ function deployContracts(result, cb) {
     }
   }
   
-  function deploy(compiledContract, callback) {
+  function deployCompiledContract(compiledContract, callback) {
     let contract = web3.eth.contract(compiledContract.abi);
     web3.eth.sendTransaction({ 
       data: '0x' + compiledContract.bytecode,
@@ -59,8 +59,8 @@ function deployContracts(result, cb) {
         if (!receipt) {
           console.log("ERROR:", "Failed to get transaction receipt after deploying contract");
         } else {
-          deployedContracts.push(contract.at(receipt.contractAddress));
-          numContractsDeployed++;
+          deployed.push(contract.at(receipt.contractAddress));
+          numDeployed++;
           callback(null);
         }
       } else {
@@ -71,15 +71,15 @@ function deployContracts(result, cb) {
 
   async.eachLimit(contractDataArray, 1, function(contractData, callback) {
     displayProgress();
-    let compiledContract = compile(contractData);
-    deploy(compiledContract, callback);
+    let compiledContract = compileContract;
+    deployCompiledContract(compiledContract, callback);
   }, function(err) {
     displaySummary();
     cb(null, result);
   });  
 }
 
-function buildContractObject(contractInfo, contractOwnerIndex) {
+function gatherInfo(contractInfo, contractOwnerIndex) {
   let contractObject = {};
   contractObject.relativeSourcePath = contractInfo.RelativeSourcePath;
   contractObject.contractName = contractInfo.ContractName;
@@ -91,6 +91,6 @@ function buildContractObject(contractInfo, contractOwnerIndex) {
   return contractObject;
 }
 
-exports.DeployedContracts = deployedContracts;
-exports.DeployContracts = deployContracts;
-exports.BuildContractObject = buildContractObject;
+exports.Deployed = deployed;
+exports.Deploy = deploy;
+exports.GatherInfo = gatherInfo;
