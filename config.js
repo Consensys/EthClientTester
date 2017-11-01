@@ -33,19 +33,6 @@ config.doAccountCreation = false;
 config.doAccountUnlocking = false;
 config.doEtherRedistribution = false;
 
-//config.txOptions = {
-//  txRatePerAccount: 1,                 // transaction rate per account per second
-//  numAccounts: 5,                       // number of accounts
-//  value: 10,
-//  maxTimeMillis: 10*1000                    // amount of time to send the transactions for
-//};
-//
-//config.queryOptions = {
-//  batchRate: 1,                         // batch rate per second
-//  numQueriesPerBatch: 1,                // number of queries per batch
-//  maxTimeMillis: 5000                   // amount of time to send the queries for
-//};
-//
 //config.contractDataArray = [
 //  contracts.BuildContractObject(ERC20, 0),
 //  contracts.BuildContractObject(ERC20, 1)
