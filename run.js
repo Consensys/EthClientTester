@@ -1,4 +1,5 @@
 var transactions = require('./transactions.js');
+var contracts = require('./contracts.js');
 var accounts = require('./accounts.js');
 var scheduler = require('./scheduler.js');
 
@@ -21,8 +22,14 @@ function sendTransactions(tasks) {
   return tasks;
 }
 
+function deployContracts(tasks) {
+  tasks.push(contracts.Deploy);
+  return tasks;
+}
+
 function configure(tasks) {
-  tasks = sendTransactions(tasks);
+  //tasks = sendTransactions(tasks);
+  tasks = deployContracts(tasks);
   /* always make sure that before any run-task is started, 
   updated account info (like balances) is fetched... this should 
   ideally happen at the end of a previous task-list*/

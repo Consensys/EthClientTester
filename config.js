@@ -1,12 +1,5 @@
-/*  It seems that in order to generate high transaction volumes in a very
-    short time, it is necessary to use multiple accounts (this probably depends on
-    network quality), since nonce value sequences get broken, or the whole 
-    batch fails (when >700 transactions are sent from a single account). 
-    It also seems like the txpool is limited to a certain number (64?) of 
-    queued transactions per account (rather than in total). Previously used 
-    accounts can be reused for benchmarking, but they need to be unlocked 
-    everytime, and this can take quite long for a large number of accounts.
-*/
+var contracts = require('./contracts.js');
+var ERC20 = require('./contracts/ERC20.js');
 
 var config = {}
 
@@ -33,10 +26,10 @@ config.doAccountCreation = false;
 config.doAccountUnlocking = false;
 config.doEtherRedistribution = false;
 
-//config.contractDataArray = [
-//  contracts.BuildContractObject(ERC20, 0),
-//  contracts.BuildContractObject(ERC20, 1)
-//];
+config.contractDataArray = [
+  contracts.GatherInfo(ERC20, 0),
+  contracts.GatherInfo(ERC20, 1)
+];
 
 config.web3RPCInitTimeoutMillis = 5000; // exits with error if it takes longer than this
 config.accountUnlockThreadLimit = 5;    // number of concurrent threads limited to this

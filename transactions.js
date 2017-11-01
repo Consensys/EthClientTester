@@ -75,7 +75,7 @@ function sendBatch(result, cb) {
       tasks.push(accounts.Unlock);
     }
   } else { 
-    if (accounts.Unlocked.length < numRequiredAccounts) {
+    if ((!accounts.Unlocked) || accounts.Unlocked.length < numRequiredAccounts) {
       stopInterval = true;
       /*if not unlocking accounts, it is assumed that all 
         the needed accounts are already unlocked*/
