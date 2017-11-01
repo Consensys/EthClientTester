@@ -22,14 +22,35 @@ function sendTransactions(tasks) {
   return tasks;
 }
 
-function deployContracts(tasks) {
+function testContracts(tasks) {
   tasks.push(contracts.Deploy);
+  tasks.push(function(result, cb) {
+    console.log("Account 0 Balance: " + 
+      contracts.Deployed[0].balanceOf(accounts.Unlocked[0]).toNumber());
+    console.log("Account 1 Balance: " + 
+      contracts.Deployed[0].balanceOf(accounts.Unlocked[1]).toNumber());
+    cb(null, result);
+  });
+  tasks.push(function(result, cb) {
+    scheduler.Repeat(function(repeater) {
+      result.repeater = repeater;
+      console.log("Transfering 10 tokens from account 0 to account 1");
+      contracts.Deployed[0].transfer(accounts.Unlocked[1], 10, {from: accounts.Unlocked[0]});
+      console.log("Account 0 Balance: " + 
+        contracts.Deployed[0].balanceOf(accounts.Unlocked[0]).toNumber());
+      console.log("Account 1 Balance: " + 
+        contracts.Deployed[0].balanceOf(accounts.Unlocked[1]).toNumber());
+      result.repeater.completed();
+    }, 10, 1, function() {
+      cb(null, result);
+    });
+  });
   return tasks;
 }
 
 function configure(tasks) {
   //tasks = sendTransactions(tasks);
-  tasks = deployContracts(tasks);
+  tasks = testContracts(tasks);
   /* always make sure that before any run-task is started, 
   updated account info (like balances) is fetched... this should 
   ideally happen at the end of a previous task-list*/
