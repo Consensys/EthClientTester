@@ -23,7 +23,12 @@ function sendTransactions(tasks) {
 }
 
 function testContracts(tasks) {
-  tasks.push(contracts.Deploy);
+  tasks.push(function(result, cb) {
+    result.accountOptions = {
+      numRequiredAccounts: 2
+    }
+    contracts.Deploy(result, cb);
+  });  
   tasks.push(function(result, cb) {
     console.log("Account 0 Balance: " + 
       contracts.Deployed[0].balanceOf(accounts.Unlocked[0]).toNumber());

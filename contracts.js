@@ -11,15 +11,18 @@ function deploy(result, cb) {
   let stdout = process.stdout;
   let web3 = result.web3;
   let contractDataArray = config.contractDataArray;
-  let numRequiredAccounts = getMaxAccountIndex(contractDataArray) + 1;
+  let numDeploymentAccounts = getMaxAccountIndex(contractDataArray) + 1;
   let stopinterval = false;
   //initialize a new task list for performing the required setup
   let tasks = [function(callback) { callback(null, result); }];
 
   //settings passed along to the queued functions
-  result.accountOptions = {
-    numRequiredAccounts: numRequiredAccounts,
-  };
+  if (!result.accountOptions) {
+    result.accountOptions = {
+      numRequiredAccounts: numDeploymentAccounts,
+    };
+  }
+  let numRequiredAccounts = result.accountOptions.numRequiredAccounts;
 
   function displaySummary() {
     console.log("\r[INFO] Deploying contracts: " + 
