@@ -19,6 +19,11 @@ config.tests = [
   require('./tests/etherTransactionExample1.js')
 ];
 
+/* When using testrpc, the number of accounts
+   will need to be specified when testrpc is
+   started (use the -a=... option), and these 
+   accounts will all be unlocked automatically.
+*/
 /*  Number of accounts on test node that are always
     automatically unlocked when node starts (this is
     a node setting, so numInitiallyUnlockedAccounts
@@ -26,10 +31,8 @@ config.tests = [
 */
 config.numInitiallyUnlockedAccounts = 0;  
 
-/* When using testrpc, the number of accounts
-   will need to be specified when testrpc is
-   started (use the -a=... option), and these 
-   accounts will all be unlocked automatically.
+/*  These can be changed if the necessary accounts 
+    have already been created/unlocked
 */
 config.doAccountCreation = true;
 config.doAccountUnlocking = true;
