@@ -349,7 +349,7 @@ function accounts() {
   object.Sync = sync;
   object.Create = create;
   object.Unlock = unlock;
-  object.UdateRequiredToUnlocked = updateRequiredToUnlocked;
+  object.UpdateRequiredToUnlocked = updateRequiredToUnlocked;
   object.UpdateAllExistingToUnlocked = updateAllExistingToUnlocked;
   object.UnlockAll = unlockAll;
   object.GetBalances = getBalances;

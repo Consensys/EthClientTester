@@ -10,7 +10,7 @@ module.exports.add = function(tasks) {
         txValue: 10,// transaction value
       };
       transactions.SendBatch(result);
-    }, 20, 10, function() {
+    }, 50, 10, function() {
       cb(null, result);
     });
   });

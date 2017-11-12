@@ -59,25 +59,28 @@ function transactions() {
           handleTransactionResponse(err, res);
         }));
       }
-      batch.execute();
       if (result.repeater) {
         result.repeater.displayProgress("Sending Transaction Batch");
       }
+      batch.execute();
     }
 
     //create accounts
     if ((config.doAccountCreation === undefined) || (config.doAccountCreation != false)) {
-      stopInterval = true;
-      tasks.push(accounts.Create);
+      if (accounts.Existing.length < numRequiredAccounts) {
+        stopInterval = true;
+        tasks.push(accounts.Create);
+      }
     }
     //unlock accounts
-    if ((config.doAccountUnlocking === undefined) || (config.doAccountUnlocking != false)) {
+    if ((config.doAccountUnlocking === undefined) || (config.doAccountUnlocking != false) && 
+      (config.numInitiallyUnlockedAccounts < numRequiredAccounts)) {
       if (accounts.Unlocked.length < numRequiredAccounts) {
         stopInterval = true;
         tasks.push(accounts.Unlock);
       }
     } else { 
-      if ((!accounts.Unlocked) || accounts.Unlocked.length < numRequiredAccounts) {
+      if ((!accounts.Unlocked) || (accounts.Unlocked.length < numRequiredAccounts)) {
         stopInterval = true;
         /*if not unlocking accounts, it is assumed that all 
           the needed accounts are already unlocked*/

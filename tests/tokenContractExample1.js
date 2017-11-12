@@ -1,6 +1,10 @@
 var scheduler = require('../scheduler.js');
 var ERC20 = require('../contracts/ERC20.js');
 
+/*  NOTE: this test will not be able to generate high tx rates,
+    since the transactions are not called asynchronuously!!
+*/
+
 module.exports.add = function(tasks) {
   tasks.push(function(result, cb) {
     let accounts = result.accounts;
