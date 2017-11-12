@@ -1,7 +1,6 @@
 var async = require('async');
 var init = require('./init.js');
 var run = require('./run.js');
-var accounts = require('./accounts.js');
 var config = require('./config.js');
 
 function start() {
@@ -10,6 +9,9 @@ function start() {
     results[index] = {};
     results[index].web3RPCHost = config.nodes[index].web3RPCHost;
     results[index].web3RPCPort = config.nodes[index].web3RPCPort;
+    results[index].accounts = new (require('./accounts.js'));
+    results[index].contracts = new (require('./contracts.js'));
+    results[index].transactions = new (require('./transactions.js'));
   }
 
   let parTasks = [];
@@ -20,7 +22,7 @@ function start() {
         function(callback) { callback(null, result) },
         init.Web3RPCTimeout,
         init.ExtendWeb3,
-        accounts.Sync
+        result.accounts.Sync
       ];
       seqTasks = run.Configure(seqTasks);
       async.waterfall(seqTasks, function(err, res) {
@@ -28,7 +30,6 @@ function start() {
           console.log("ERROR in parallel task " + index, err);
           callback(err, null); 
         } else {
-          //console.log("[INFO] Completed. Exiting...");
           callback(null, 1); 
         }
       });

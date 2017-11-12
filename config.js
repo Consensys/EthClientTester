@@ -4,12 +4,14 @@ var config = {}
 */
 config.nodes = [
   {
-    web3RPCHost: "localhost",
-    web3RPCPort: "8545"
-  },
-  {
-    web3RPCHost: "localhost",
-    web3RPCPort: "8545"
+    web3RPCHost: "10.0.0.15",
+    web3RPCPort: "20010"
+  }, {
+    web3RPCHost: "10.0.0.16",
+    web3RPCPort: "20010"
+  }, {
+    web3RPCHost: "10.0.0.17",
+    web3RPCPort: "20010"
   }
 ]
 
@@ -25,9 +27,9 @@ config.numInitiallyUnlockedAccounts = 0;
    started (use the -a=... option), and these 
    accounts will all be unlocked automatically.
 */
-config.doAccountCreation = false;
-config.doAccountUnlocking = false;
-config.doEtherRedistribution = false;
+config.doAccountCreation = true;
+config.doAccountUnlocking = true;
+config.doEtherRedistribution = true;
 
 /*  Miscellaneous settings
 */
