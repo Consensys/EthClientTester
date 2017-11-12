@@ -5,8 +5,12 @@ var config = {}
 
 /*  Connection settings
 */
-config.web3RPCHost = "localhost"     //Raft4
-config.web3RPCPort = "8545"
+config.nodes = [
+  {
+    web3RPCHost: "localhost",
+    web3RPCPort: "8545"
+  }
+]
 
 /*  Number of accounts on test node that are always
     automatically unlocked when node starts (this is
