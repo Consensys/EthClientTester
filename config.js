@@ -6,6 +6,10 @@ config.nodes = [
   {
     web3RPCHost: "localhost",
     web3RPCPort: "8545"
+  },
+  {
+    web3RPCHost: "localhost",
+    web3RPCPort: "8545"
   }
 ]
 

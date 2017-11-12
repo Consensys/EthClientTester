@@ -36,17 +36,16 @@ function testContracts(tasks) {
     contracts.Deploy(result, cb);
   });  
   tasks.push(function(result, cb) {
-    console.log("Account 0 Balance: " + 
-      contracts.Deployed[0].balanceOf(accounts.Unlocked[0]).toNumber());
-    console.log("Account 1 Balance: " + 
-      contracts.Deployed[0].balanceOf(accounts.Unlocked[1]).toNumber());
-    cb(null, result);
-  });
-  tasks.push(function(result, cb) {
     scheduler.Repeat(function(repeater) {
       result.repeater = repeater;
       console.log("Transfering 10 tokens from account 0 to account 1");
       contracts.Deployed[0].transfer(accounts.Unlocked[1], 10, {from: accounts.Unlocked[0]});
+      console.log("Account 0 Balance: " + 
+        contracts.Deployed[0].balanceOf(accounts.Unlocked[0]).toNumber());
+      console.log("Account 1 Balance: " + 
+        contracts.Deployed[0].balanceOf(accounts.Unlocked[1]).toNumber());
+      console.log("Transfering 10 tokens from account 1 to account 0");
+      contracts.Deployed[0].transfer(accounts.Unlocked[0], 10, {from: accounts.Unlocked[1]});
       console.log("Account 0 Balance: " + 
         contracts.Deployed[0].balanceOf(accounts.Unlocked[0]).toNumber());
       console.log("Account 1 Balance: " + 

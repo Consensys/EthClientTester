@@ -2,12 +2,12 @@ var async = require('async');
 var fs = require('fs');
 var solc = require('solc');
 var accounts = require('./accounts.js');
+let config = require('./config.js');
 
 var deployed = [];
 var numDeployed = 0;
 
 function deploy(result, cb) {
-  let config = require('./config.js');
   let stdout = process.stdout;
   let web3 = result.web3;
   let contractDataArray = result.contractOptions.contractDataArray;

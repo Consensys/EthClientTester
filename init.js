@@ -7,8 +7,8 @@ var run = require('./run.js');
 var config = require('./config.js')
 
 function web3RPC(result, cb) {
-  let host = config.nodes[0].web3RPCHost;
-  let port = config.nodes[0].web3RPCPort;
+  let host = result.web3RPCHost;
+  let port = result.web3RPCPort;
   let httpProvider = Web3RPC.providers.HttpProvider;
   result.web3 = new Web3RPC(new httpProvider("http://" + host + ":" + port));
   result.web3.eth.getBlockNumber(function(err, res) {
