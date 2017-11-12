@@ -1,7 +1,6 @@
 function transactions() {
   let async = require('async');
   let metrics = require('./metrics.js');
-  let accounts = require('./accounts.js');
   let config = require('./config.js');
   let object = {};
 
@@ -16,6 +15,7 @@ function transactions() {
     let numRequiredAccounts = txOptions.numBatchTransactions;
     let doAccountCreation = config.doAccountCreation;
     let doAccountUnlocking = config.doAccountUnlocking;
+    let accounts = result.accounts;
     let txValue = txOptions.txValue;
     let requestCount = 0;
     let responseCount = 0;
@@ -151,7 +151,7 @@ function transactions() {
   }
 
   object.SendBatch = sendBatch;
-  object.ConfirmTransactions = confirmTransactions;
+  object.Confirm = confirmTransactions;
 
   return object;
 }

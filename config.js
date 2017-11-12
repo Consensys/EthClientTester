@@ -13,7 +13,11 @@ config.nodes = [
     web3RPCHost: "10.0.0.17",
     web3RPCPort: "20010"
   }
-]
+];
+
+config.tests = [
+  require('./tests/etherTransactionExample1.js')
+];
 
 /*  Number of accounts on test node that are always
     automatically unlocked when node starts (this is

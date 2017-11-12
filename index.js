@@ -1,6 +1,5 @@
 var async = require('async');
 var init = require('./init.js');
-var run = require('./run.js');
 var config = require('./config.js');
 
 function start() {
@@ -24,7 +23,14 @@ function start() {
         init.ExtendWeb3,
         result.accounts.Sync
       ];
-      seqTasks = run.Configure(seqTasks);
+      for (let index = 0; index < config.tests.length; index++) {
+        seqTasks = config.tests[index].add(seqTasks);
+        if (index < config.tests.length-1) {
+          seqTasks.push(function(result, cb) {
+            result.accounts.Sync(result,cb);
+          });
+        }
+      }
       async.waterfall(seqTasks, function(err, res) {
         if (err) { 
           console.log("ERROR in parallel task " + index, err);
