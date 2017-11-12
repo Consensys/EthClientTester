@@ -13,6 +13,6 @@ cd QuorumNetworkTester
 npm install
 ```
 ## Running a test
-1) Edit `config.js` by configuring `web3RPCHost` and `web3RPCPort` to point to your node (or run `testrpc`)  
+1) Edit `config.js` by configuring `web3RPCHost` and `web3RPCPort` to point to your node(s).
 2) Run `node index.js`
-This will run an example test where an ERC20 contract is deployed and some tokens are sent between two addresses. 
+This will run an example test as specified in `config.js`. Take a look inside the `tests` folder for more tests. 
