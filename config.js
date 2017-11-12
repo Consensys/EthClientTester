@@ -1,6 +1,3 @@
-var contracts = require('./contracts.js');
-var ERC20 = require('./contracts/ERC20.js');
-
 var config = {}
 
 /*  Connection settings
@@ -18,7 +15,6 @@ config.nodes = [
     should correspond with how the node is set up)
 */
 config.numInitiallyUnlockedAccounts = 0;  
-                                        
 
 /* When using testrpc, the number of accounts
    will need to be specified when testrpc is
@@ -28,12 +24,6 @@ config.numInitiallyUnlockedAccounts = 0;
 config.doAccountCreation = false;
 config.doAccountUnlocking = false;
 config.doEtherRedistribution = false;
-
-/*  Contract settings
-*/
-config.contractDataArray = [
-  contracts.GatherInfo(ERC20, 0)
-];
 
 /*  Miscellaneous settings
 */

@@ -10,9 +10,10 @@ function deploy(result, cb) {
   let config = require('./config.js');
   let stdout = process.stdout;
   let web3 = result.web3;
-  let contractDataArray = config.contractDataArray;
+  let contractDataArray = result.contractOptions.contractDataArray;
   let numDeploymentAccounts = getMaxAccountIndex(contractDataArray) + 1;
   let stopinterval = false;
+
   //initialize a new task list for performing the required setup
   let tasks = [function(callback) { callback(null, result); }];
 

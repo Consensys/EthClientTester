@@ -1,7 +1,8 @@
-var transactions = require('./transactions.js');
-var contracts = require('./contracts.js');
 var accounts = require('./accounts.js');
 var scheduler = require('./scheduler.js');
+var transactions = require('./transactions.js');
+var contracts = require('./contracts.js');
+var ERC20 = require('./contracts/ERC20.js');
 
 //move task-specific initialization to their respective functions. For ex. in transactions.SendTransactions, first check to see if there are enough existing accounts, and whether there are enough of them unlocked (and create/unlock additional ones as needed), before proceeding with the task. Do the same for all other run-tasks. Doing this will significantly simplify creating new tasks, since the initialization will be automatically deduced from the task input parameters, so the user does not need to predetermine the number of accounts/contracts or whatever else is needed for a specific task. 
 
@@ -24,6 +25,11 @@ function sendTransactions(tasks) {
 
 function testContracts(tasks) {
   tasks.push(function(result, cb) {
+    result.contractOptions = {
+      contractDataArray: [
+        contracts.GatherInfo(ERC20, 0)
+      ]
+    }
     result.accountOptions = {
       numRequiredAccounts: 2
     }
