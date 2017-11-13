@@ -6,7 +6,7 @@ module.exports.add = function(tasks) {
       let transactions = result.transactions;
       result.repeater = repeater;
       result.txOptions = {
-        numBatchTransactions: 1,//number of transactions in batch (also number of accounts used)
+        numBatchTransactions: 10,//number of transactions in batch (also number of accounts used)
         txValue: 10,// transaction value
       };
       transactions.SendBatch(result);

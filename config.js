@@ -4,18 +4,24 @@ var config = {}
 */
 config.nodes = [
   {
-    web3RPCHost: "10.0.0.15",
-    web3RPCPort: "20010"
+      web3RPCHost: "localhost",
+      web3RPCPort: "8545",
   }, {
-    web3RPCHost: "10.0.0.16",
-    web3RPCPort: "20010"
-  }, {
-    web3RPCHost: "10.0.0.17",
-    web3RPCPort: "20010"
+      web3RPCHost: "localhost",
+      web3RPCPort: "8546",
+ //   web3RPCHost: "10.0.0.15",
+ //   web3RPCPort: "20010"
+ // }, {
+ //   web3RPCHost: "10.0.0.16",
+ //   web3RPCPort: "20010"
+ // }, {
+ //   web3RPCHost: "10.0.0.17",
+ //   web3RPCPort: "20010"
   }
 ];
 
 config.tests = [
+  //require('./tests/tokenContractAsynchronuousExample1.js')
   require('./tests/etherTransactionExample1.js')
 ];
 
@@ -35,12 +41,14 @@ config.numInitiallyUnlockedAccounts = 0;
     have already been created/unlocked
 */
 config.doAccountCreation = true;
-config.doAccountUnlocking = true;
-config.doEtherRedistribution = true;
+config.doAccountUnlocking = false;
+config.doEtherRedistribution = false;
 
 /*  Miscellaneous settings
 */
 config.web3RPCInitTimeoutMillis = 5000; // exits with error if it takes longer than this
 config.accountUnlockThreadLimit = 5;    // number of concurrent threads limited to this
+
+config.syncUnpause = true;
 
 module.exports = config

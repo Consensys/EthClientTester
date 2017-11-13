@@ -1,5 +1,7 @@
-function repeat(func, numIterations, frequency, callback) {
+var syncUnpause = require('./config.js').syncUnpause;
+var repeaters = [];
 
+function repeat(func, numIterations, frequency, callback) {
   let stdout = process.stdout;
   let paused = false;
   let initiatedCount = 0;
@@ -24,30 +26,38 @@ function repeat(func, numIterations, frequency, callback) {
         numIterations + `` + description2);
     }
   }
-  
+  repeaters.push(repeater);
+
+  function allRepeatersUnpaused() {
+    let output = true;
+    for (let index = 0; index < repeaters.length; index++) {
+      if (repeaters[index].paused == true) { output = false; }
+    }
+    return output;
+  } 
+  /*  There are two distinctly different conditions under which the repeater
+      can be signalled to stop:
+        1)  Once the required number of task repetitions (numIterations) have
+            been started, and all tasks have been completed (there is no backlog)
+        2)  Once the required number of task repetitions have been started, and 
+            not all tasks have been completed (there is a backlog of pending tasks).
+
+      Case 1 occurs when the time between repetitions is long
+      compared to the time it takes to complete the task, i.e. low 
+      repetition rate (frequency) and short task execution time.
+
+      Case 2 occurs when the time between repetitions is short 
+      compared to the time it takes to complete the task, i.e. high
+      repetition rate (frequency) and long task execution time.
+
+      Initiating new tasks on condition that initiatedCount < numIterations,
+      and checking that completedCount >= numIterations before calling
+      the next callback handles both cases appropriately.
+  */
   initiatedCount++;
   func(repeater);
   let intervalID = setInterval(function() {
-    if (!paused) {
-      /*  There are two distinctly different conditions under which the repeater
-          can be signalled to stop:
-            1)  Once the required number of task repetitions (numIterations) have
-                been started, and all tasks have been completed (there is no backlog)
-            2)  Once the required number of task repetitions have been started, and 
-                not all tasks have been completed (there is a backlog of pending tasks).
-
-          Case 1 occurs when the time between repetitions is long
-          compared to the time it takes to complete the task, i.e. low 
-          repetition rate (frequency) and short task execution time.
-
-          Case 2 occurs when the time between repetitions is short 
-          compared to the time it takes to complete the task, i.e. high
-          repetition rate (frequency) and long task execution time.
-
-          Initiating new tasks on condition that initiatedCount < numIterations,
-          and checking that completedCount >= numIterations before calling
-          the next callback handles both cases appropriately.
-      */
+    if ((!syncUnpause && !paused) || (syncUnpause && allRepeatersUnpaused())) {
       if (completedCount >= numIterations) {
         clearInterval(intervalID);
         if (callback) {
