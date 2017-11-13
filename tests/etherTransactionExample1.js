@@ -1,7 +1,19 @@
 var scheduler = require('../scheduler.js');
 
-module.exports.add = function(tasks) {
-  tasks.push(function(result, cb) {
+module.exports.prepare = function(seq) {
+  seq.push(function(result, cb) {
+    result.accountOptions = {
+      numRequiredAccounts: 10
+    }
+    result.accounts.Create(result, cb);
+  });
+  seq.push(function(result, cb) {
+    result.accounts.Unlock(result, cb);
+  });
+}
+
+module.exports.start = function(seq) {
+  seq.push(function(result, cb) {
     scheduler.Repeat(function(repeater) {
       let transactions = result.transactions;
       result.repeater = repeater;
@@ -14,8 +26,8 @@ module.exports.add = function(tasks) {
       cb(null, result);
     });
   });
-  tasks.push(function(result, cb) {
+  seq.push(function(result, cb) {
     result.transactions.Confirm(result, cb) ;
   });
-  return tasks;
+  return seq;
 }

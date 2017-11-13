@@ -22,7 +22,7 @@ function accounts() {
   function create(result, cb) {
     let stdout = process.stdout;
     let web3 = result.web3;
-    object.Existing = web3.eth.accounts;
+    //object.Existing = web3.eth.accounts;
     let numExistingAccounts = object.Existing.length;
     let numCurrentAccounts = numExistingAccounts;
     let accountOptions = result.accountOptions;

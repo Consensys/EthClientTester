@@ -4,19 +4,14 @@ var config = {}
 */
 config.nodes = [
   {
-      web3RPCHost: "localhost",
-      web3RPCPort: "8545",
+    web3RPCHost: "10.0.0.15",
+    web3RPCPort: "20010"
   }, {
-      web3RPCHost: "localhost",
-      web3RPCPort: "8546",
- //   web3RPCHost: "10.0.0.15",
- //   web3RPCPort: "20010"
- // }, {
- //   web3RPCHost: "10.0.0.16",
- //   web3RPCPort: "20010"
- // }, {
- //   web3RPCHost: "10.0.0.17",
- //   web3RPCPort: "20010"
+    web3RPCHost: "10.0.0.16",
+    web3RPCPort: "20010"
+  }, {
+    web3RPCHost: "10.0.0.17",
+    web3RPCPort: "20010"
   }
 ];
 
