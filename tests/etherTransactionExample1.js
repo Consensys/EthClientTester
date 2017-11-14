@@ -3,7 +3,7 @@ var scheduler = require('../scheduler.js');
 module.exports.prepare = function(seq) {
   seq.push(function(result, cb) {
     result.accountOptions = {
-      numRequiredAccounts: 10
+      numRequiredAccounts: 5
     }
     result.accounts.Create(result, cb);
   });
@@ -18,11 +18,11 @@ module.exports.start = function(seq) {
       let transactions = result.transactions;
       result.repeater = repeater;
       result.txOptions = {
-        numBatchTransactions: 10,//number of transactions in batch (also number of accounts used)
+        numBatchTransactions: 5,//number of transactions in batch (also number of accounts used)
         txValue: 10,// transaction value
       };
       transactions.SendBatch(result);
-    }, 50, 10, function() {
+    }, 500, 20, function() {
       cb(null, result);
     });
   });

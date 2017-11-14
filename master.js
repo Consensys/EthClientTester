@@ -88,24 +88,21 @@ if (cluster.isMaster) {
     res = {};
     if (msg.command == 'initialize') {
       nodeIndex = msg.params[0];
-      console.log("Initializing " + nodeIndex);
       res.nodeIndex = nodeIndex;
       res.msg = msg;
       run.Initialize(nodeIndex, handleWorkCompleted);
     } else if (msg.command == 'prepare') {
       testIndex = msg.params[0];
-      console.log("Preparing " + nodeIndex);
       res.nodeIndex = nodeIndex;
       res.testIndex = testIndex;
       res.msg = msg;
       run.Prepare(nodeIndex, testIndex, handleWorkCompleted);
     } else if (msg.command == 'start') {
       testIndex = msg.params[0];
-      console.log("Starting " + nodeIndex);
       res.testIndex = testIndex;
       res.nodeIndex = nodeIndex;
       res.msg = msg;
-      //run.Start(nodeIndex, testIndex, handleWorkCompleted);
+      run.Start(nodeIndex, testIndex, handleWorkCompleted);
     }
   });
 }

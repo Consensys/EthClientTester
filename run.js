@@ -51,3 +51,4 @@ function start(nodeIndex, testIndex, cb) {
 
 module.exports.Initialize = initialize;
 module.exports.Prepare = prepare;
+module.exports.Start = start;
