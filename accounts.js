@@ -188,7 +188,7 @@ function accounts() {
           console.log("ERROR", err); 
         } else { 
           responseCount++;
-          object.balances[object.Existing.indexOf(account)] = res.toNumber(); 
+          object.Balances[object.Existing.indexOf(account)] = res.toNumber(); 
           object.TotalBalance += res.toNumber();
         }
         stdout.write(`\r[INFO] Getting account balances: ` + responseCount + 
@@ -244,17 +244,18 @@ function accounts() {
     let accountOptions = result.accountOptions;
     let numRequiredAccounts = accountOptions.numRequiredAccounts;
     // at object point it should not be possible to have numRequiredAccounts > existing.length
-    let requiredAccounts = object.Existing.slice(0, numRequiredAccounts);
+    let requiredAccounts = object.Unlocked.slice(0, numRequiredAccounts);
     let responseCount = 0;
     let requestCount = 0;
     let batch = web3.createBatch();
     for (let i = 1; i < numRequiredAccounts; i++) {
-      if (balances[i] > 0) {
+      if (object.Balances[i] > 0) {
         requestCount++;
-        let tx = {from: requiredAccounts[i], to: requiredAccounts[0], value: object.balances[i]};
+        let tx = {from: requiredAccounts[i], to: requiredAccounts[0], value: object.Balances[i]};
         batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
           responseCount++;
           if(err) { 
+            console.log("ERROR:", err);
             cb(err, null);
           } else {
             stdout.write(`\r[INFO] Collecting funds: ` + responseCount + 
@@ -282,9 +283,9 @@ function accounts() {
     let requestCount = 0;
     let batch = web3.createBatch();
     for (let i = 1; i < numExistingAccounts; i++) {
-      if (balances[i] > 0) {
+      if (object.Balances[i] > 0) {
         requestCount++;
-        let tx = {from: object.Existing[i], to: object.Existing[0], value: object.balances[i]};
+        let tx = {from: object.Unlocked[i], to: object.Unlocked[0], value: object.Balances[i]};
         batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
           responseCount++;
           if(err) { 
@@ -315,7 +316,7 @@ function accounts() {
     let numRequiredAccounts = accountOptions.numRequiredAccounts;
     // at object point it should not be possible to have numRequiredAccounts > existing.length
     let requiredAccounts = object.Existing.slice(0, numRequiredAccounts);
-    let requiredAccountBalances = Math.floor(object.TotalBalance/numRequiredAccounts);
+    let requiredAccountBalances = Math.floor(object.Balances[0]/numRequiredAccounts);
     let responseCount = 0;
     let requestCount = 0;
     let batch = web3.createBatch();
@@ -323,10 +324,11 @@ function accounts() {
       ` / ` + numRequiredAccounts);
     for (let i = 1; i < numRequiredAccounts; i++) {
       requestCount++;
-      let tx = { from: object.Existing[0], to: object.Existing[i], value: requiredAccountBalances };
+      let tx = { from: object.Unlocked[0], to: object.Unlocked[i], value: requiredAccountBalances };
       batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
         responseCount++;
         if(err) { 
+          console.log("ERROR", err);
           cb(err, null);
         } else {
           stdout.write(`\r[INFO] Funding Accounts: ` + (responseCount+1) + 
