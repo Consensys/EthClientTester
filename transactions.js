@@ -22,7 +22,7 @@ function transactions() {
       let txHash = res;
       responseCount++;
       if(err) { 
-        console.log(err);
+        console.log("TX ERROR", err);
         object.NumSendErrors++;
       } else {
         object.SentTxHashes.push(txHash);

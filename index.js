@@ -93,7 +93,6 @@ if (cluster.isMaster) {
             startAllWorkers();
           }
         } else if (res.msg.command == 'execute') {
-          //worker.kill()
           if (isLastWorkerToBeFinished(worker)) {
             console.log("Exiting...")
             cluster.disconnect(function() {

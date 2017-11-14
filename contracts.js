@@ -27,15 +27,15 @@ function contracts() {
     }
     let numRequiredAccounts = result.accountOptions.numRequiredAccounts;
 
-    function displaySummary() {
-      console.log("\r[INFO] Deploying contracts: " + 
-        object.NumDeployed + " / " + contractDataArray.length);
-    }
+    //function displaySummary() {
+    //  console.log("\r[INFO] Deploying contracts: " + 
+    //    object.NumDeployed + " / " + contractDataArray.length);
+    //}
 
-    function displayProgress() {
-      stdout.write(`\r[INFO] Deploying contracts: ` + 
-        object.NumDeployed + ` / ` + contractDataArray.length);
-    }
+    //function displayProgress() {
+    //  stdout.write(`\r[INFO] Deploying contracts: ` + 
+    //    object.NumDeployed + ` / ` + contractDataArray.length);
+    //}
 
     function compileContract(contractData) {
       let relativeSourcePath = contractData.relativeSourcePath;
@@ -63,11 +63,12 @@ function contracts() {
     
     function deployCompiledContract(compiledContract, callback) {
       let contract = web3.eth.contract(compiledContract.abi);
-      web3.eth.sendTransaction({ 
+      let deploymentTx = { 
         data: '0x' + compiledContract.bytecode,
         from: accounts.Unlocked[compiledContract.ownerIndex],
-        gas: 4700000 // if not enough gas is provided, contract won't be initialized properly... truffle uses a default of +- 4.7 million gass
-      }, function(err, res) {
+      };
+      deploymentTx.gas = web3.eth.estimateGas(deploymentTx);
+      web3.eth.sendTransaction(deploymentTx, function(err, res) {
         if (!err) { 
           //console.log(res);
           // request the transaction receipt in order to obtain the contract address
@@ -75,7 +76,26 @@ function contracts() {
           if (!receipt) {
             console.log("ERROR:", "Failed to get transaction receipt after deploying contract");
           } else {
-            object.Deployed.push(contract.at(receipt.contractAddress));
+            let instance = contract.at(receipt.contractAddress);
+            for (let i = 0; i < instance.abi.length; i++) {
+              if (instance.abi[i].name) {
+                instance[instance.abi[i].name].getTx = function() {
+                  let txData = instance[instance.abi[i].name].getData.apply(this, arguments);
+                  let tx = {
+                    from: arguments[arguments.length-1].from,
+                    to: instance.address,
+                    data: txData,
+                  }
+                  if (arguments[arguments.length-1].gas) {
+                    tx.gas = arguments[arguments.length-1].gas;
+                  } else {
+                    tx.gas = web3.eth.estimateGas(tx);
+                  }
+                  return tx;
+                }
+              }
+            }
+            object.Deployed.push(instance);
             object.NumDeployed++;
             callback(null);
           }
@@ -87,11 +107,11 @@ function contracts() {
 
     function deployAllContracts() {
       async.eachLimit(contractDataArray, 1, function(contractData, callback) {
-        displayProgress();
+        //displayProgress();
         let compiledContract = compileContract(contractData);
         deployCompiledContract(compiledContract, callback);
       }, function(err) {
-        displaySummary();
+        //displaySummary();
         cb(null, result);
       });  
     }

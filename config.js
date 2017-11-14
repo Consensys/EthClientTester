@@ -19,8 +19,8 @@ config.nodes = [
 ];
 
 config.tests = [
-  //require('./tests/tokenContractAsynchronuousExample1.js')
-  require('./tests/etherTransactionExample1.js')
+  require('./tests/tokenContractAsynchronuousExample1.js')
+  //require('./tests/etherTransactionExample1.js')
 ];
 
 /* When using testrpc, the number of accounts

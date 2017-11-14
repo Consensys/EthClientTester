@@ -1,48 +1,60 @@
 var scheduler = require('../scheduler.js');
 var ERC20 = require('../contracts/ERC20.js');
 
-/*  NOTE: this test will not be able to generate high tx rates,
-    since the transactions are not called asynchronuously!!
-*/
+let frequency = 50;
+let numIterations = 50;
 
-module.exports.add = function(tasks) {
-  tasks.push(function(result, cb) {
-    let accounts = result.accounts;
-    let contracts = result.contracts;
-    result.contractOptions = {
-      contractDataArray: [
-        contracts.GatherInfo(ERC20, 0)
-      ]
-    }
+module.exports.prepare = function(seq) {
+  seq.push(function(result, cb) {
     result.accountOptions = {
       numRequiredAccounts: 2
     }
-    contracts.Deploy(result, cb);
-  });  
-  tasks.push(function(result, cb) {
+    result.accounts.Create(result, cb);
+  });
+  seq.push(function(result, cb) {
+    result.accounts.Unlock(result, cb);
+  });
+  seq.push(function(result, cb) {
+    let contract1DeploymentAccountIndex = 0;
+    result.contractOptions = {
+      contractDataArray: [
+        result.contracts.GatherInfo(ERC20, contract1DeploymentAccountIndex)
+      ]
+    }
+    result.contracts.Deploy(result, cb);
+  });
+}
+
+module.exports.execute = function(seq) {
+  seq.push(function(result, cb) {
+    let contracts = result.contracts;
+    let accounts = result.accounts;
+    console.log("Balance 0:" + contracts.Deployed[0].balanceOf(accounts.Unlocked[0]));
+    console.log("Balance 1:" + contracts.Deployed[0].balanceOf(accounts.Unlocked[1]));
+    cb(null, result);
+  });
+  seq.push(function(result, cb) {
     scheduler.Repeat(function(repeater) {
-      result.repeater = repeater;
-      let accounts = result.accounts;
+      let transactions = result.transactions;
       let contracts = result.contracts;
-      console.log("1Transfering 10 tokens from account 0 to account 1");
-      //console.log(contracts.Deployed[0].transfer)
-      contracts.Deployed[0].transfer.sendTransaction(accounts.Unlocked[1], 10, {from: accounts.Unlocked[0]});
-      console.log("2Transfering 10 tokens from account 1 to account 0");
-      contracts.Deployed[0].transfer.sendTransaction(accounts.Unlocked[0], 10, {from: accounts.Unlocked[1]});
-      console.log("3Transfering 10 tokens from account 0 to account 1");
-      //console.log(contracts.Deployed[0].transfer)
-      contracts.Deployed[0].transfer.sendTransaction(accounts.Unlocked[1], 10, {from: accounts.Unlocked[0]});
-      console.log("4Transfering 10 tokens from account 1 to account 0");
-      contracts.Deployed[0].transfer.sendTransaction(accounts.Unlocked[0], 10, {from: accounts.Unlocked[1]});
-      console.log("5Transfering 10 tokens from account 0 to account 1");
-      //console.log(contracts.Deployed[0].transfer)
-      contracts.Deployed[0].transfer.sendTransaction(accounts.Unlocked[1], 10, {from: accounts.Unlocked[0]});
-      console.log("6Transfering 10 tokens from account 1 to account 0");
-      contracts.Deployed[0].transfer.sendTransaction(accounts.Unlocked[0], 10, {from: accounts.Unlocked[1]});
-      result.repeater.completed();
-    }, 9999999999, 2, function() {
+      let accounts = result.accounts;
+      result.repeater = repeater;
+      result.txOptions = {
+        transactions: []
+      };
+      let tx = contracts.Deployed[0].transfer.getTx(accounts.Unlocked[1], 1, 
+        {from: accounts.Unlocked[0], gas: 100000});
+      result.txOptions.transactions.push(tx);
+      transactions.SendBatch(result); // no cb passed to indicate that called from within repeater
+    }, numIterations, frequency, function() {
       cb(null, result);
     });
   });
-  return tasks;
+  seq.push(function(result, cb) {
+    let contracts = result.contracts;
+    let accounts = result.accounts;
+    console.log("Balance 0:" + contracts.Deployed[0].balanceOf(accounts.Unlocked[0]));
+    console.log("Balance 1:" + contracts.Deployed[0].balanceOf(accounts.Unlocked[1]));
+    cb(null, result);
+  });
 }
