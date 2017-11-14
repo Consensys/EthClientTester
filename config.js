@@ -4,12 +4,15 @@ var config = {}
 */
 config.nodes = [
   {
+    name: "node1",
     web3RPCHost: "10.0.0.15",
     web3RPCPort: "20010"
   }, {
+    name: "node2",
     web3RPCHost: "10.0.0.16",
     web3RPCPort: "20010"
   }, {
+    name: "node3",
     web3RPCHost: "10.0.0.17",
     web3RPCPort: "20010"
   }

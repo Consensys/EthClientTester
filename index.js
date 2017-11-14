@@ -40,15 +40,39 @@ if (cluster.isMaster) {
     return isLastToBePrepared;
   }
 
+  function isLastWorkerToBeFinished(worker) {
+    let isLastToBeFinished = false;
+    let finishedCount = numWorkers;
+    for (let index = 0; index < numWorkers; index++) {
+      if (!workers[index].isFinished) {
+        finishedCount--;
+      }
+    }
+    if (finishedCount == numWorkers - 1) {
+      isLastToBeFinished = true;
+    }
+    worker.isFinished = true;
+    return isLastToBeFinished;
+  }
+
+  function initializeAllWorkers() {
+    console.log("Initializing...");
+    for (let index = 0; index < numWorkers; index++) {
+      workers[index].send({command: 'initialize', params: [index]});
+    }
+  }
+
   function prepareAllWorkers() {
+    console.log("Preparing...");
     for (let index = 0; index < numWorkers; index++) {
       workers[index].send({command: 'prepare', params: [testIndex]});
     }
   }
 
   function startAllWorkers() {
+    console.log("Executing...");
     for (let index = 0; index < numWorkers; index++) {
-      workers[index].send({command: 'start', params: [testIndex]});
+      workers[index].send({command: 'execute', params: [testIndex]});
     }
   }
   
@@ -57,6 +81,7 @@ if (cluster.isMaster) {
     worker.isInitialized = false;
     worker.isPrepared = false;
     worker.isStarted = false;
+    worker.isFinished = false;
     worker.on('message', function(res) {
       if (res.completed == true) {
         if (res.msg.command == 'initialize') {
@@ -67,12 +92,21 @@ if (cluster.isMaster) {
           if (isLastWorkerToBePrepared(worker)) {
             startAllWorkers();
           }
+        } else if (res.msg.command == 'execute') {
+          //worker.kill()
+          if (isLastWorkerToBeFinished(worker)) {
+            console.log("Exiting...")
+            cluster.disconnect(function() {
+              console.log("Bye!");
+            });
+          }
         }
       }
     });
     workers.push(worker);
-    worker.send({command: 'initialize', params: [index]});
   }
+
+  initializeAllWorkers();
   
 } else {
   let nodeIndex = -1;
@@ -81,6 +115,10 @@ if (cluster.isMaster) {
   
   function handleWorkCompleted() {
     res.completed = true;
+    console.log("[" + config.nodes[nodeIndex].name + "@" + 
+      config.nodes[nodeIndex].web3RPCHost + ":" + 
+      config.nodes[nodeIndex].web3RPCPort + "]: <" + 
+      res.msg.command + "> completed");
     process.send(res);
   }
 
@@ -97,12 +135,18 @@ if (cluster.isMaster) {
       res.testIndex = testIndex;
       res.msg = msg;
       run.Prepare(nodeIndex, testIndex, handleWorkCompleted);
-    } else if (msg.command == 'start') {
+    } else if (msg.command == 'execute') {
       testIndex = msg.params[0];
       res.testIndex = testIndex;
       res.nodeIndex = nodeIndex;
       res.msg = msg;
-      run.Start(nodeIndex, testIndex, handleWorkCompleted);
+      run.Execute(nodeIndex, testIndex, handleWorkCompleted);
     }
+  });
+
+  process.on('disconnect', function() {
+    console.log("[" + config.nodes[nodeIndex].name + "@" + 
+      config.nodes[nodeIndex].web3RPCHost + ":" + 
+      config.nodes[nodeIndex].web3RPCPort + "]: exited");
   });
 }
