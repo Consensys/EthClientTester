@@ -1,9 +1,14 @@
 var scheduler = require('../scheduler.js');
 
+let numAccounts = 6;
+let txValue = 10;
+let frequency = 10;
+let numIterations = 100;
+
 module.exports.prepare = function(seq) {
   seq.push(function(result, cb) {
     result.accountOptions = {
-      numRequiredAccounts: 2
+      numRequiredAccounts: numAccounts
     }
     result.accounts.Create(result, cb);
   });
@@ -29,15 +34,15 @@ module.exports.start = function(seq) {
       result.txOptions = {
         transactions: []
       };
-      for (let i = 0; i < 2; i++) {
+      for (let i = 0; i < numAccounts; i++) {
         result.txOptions.transactions.push({
           from: result.accounts.Unlocked[i],
           to: result.accounts.Unlocked[i],
-          value: 10
+          value: txValue
         });
       }
       transactions.SendBatch(result); // no cb passed to indicate called from within repeater
-    }, 2, 1, function() {
+    }, numIterations, frequency, function() {
       cb(null, result);
     });
   });
