@@ -45,9 +45,9 @@ function transactions() {
           handleTransactionResponse(err, res);
         }));
       }
-      if (result.repeater) {
-        result.repeater.displayProgress("Sending Transaction Batch");
-      }
+      //if (result.repeater) {
+      //  result.repeater.displayProgress("Sending Transaction Batch");
+      //}
       batch.execute();
     }
     createAndExecuteBatch();
@@ -68,9 +68,9 @@ function transactions() {
         object.NumConfirmedTransactions++; 
       }
       if (responseCount == requestCount) {
-        stdout.write(`\r[INFO] Summary: Errors=` + object.NumSendErrors + `, Failed=` + 
-          (responseCount-object.NumConfirmedTransactions) + `, Confirmed=` + 
-          object.NumConfirmedTransactions + ` out of ` + object.SentTxHashes.length + `\n`);
+        //stdout.write(`\r[INFO] Summary: Errors=` + object.NumSendErrors + `, Failed=` + 
+        //  (responseCount-object.NumConfirmedTransactions) + `, Confirmed=` + 
+        //  object.NumConfirmedTransactions + ` out of ` + object.SentTxHashes.length + `\n`);
         // signal to the repeater that this task has been completed.
         if (result.repeater) {
           result.repeater.completed();

@@ -67,7 +67,7 @@ function repeat(func, numIterations, frequency, callback) {
         if (initiatedCount < numIterations) {
           initiatedCount++;
           func(repeater);
-          if (initiatedCount == numIterations) { console.log(); }
+          //if (initiatedCount == numIterations) { console.log(); }
         } else { // this means that we are waiting for pending tasks to complete...
           stdout.write(`\r[INFO] Waiting for pending tasks to complete: ` +
             completedCount + ` / ` + initiatedCount);
