@@ -251,7 +251,7 @@ function accounts() {
     for (let i = 1; i < numRequiredAccounts; i++) {
       if (object.Balances[i] > 0) {
         requestCount++;
-        let tx = {from: requiredAccounts[i], to: requiredAccounts[0], value: object.Balances[i]};
+        let tx = {from: requiredAccounts[i], to: requiredAccounts[0], value: 0.9*object.Balances[i]};
         batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
           responseCount++;
           if(err) { 
@@ -285,7 +285,7 @@ function accounts() {
     for (let i = 1; i < numExistingAccounts; i++) {
       if (object.Balances[i] > 0) {
         requestCount++;
-        let tx = {from: object.Unlocked[i], to: object.Unlocked[0], value: object.Balances[i]};
+        let tx = {from: object.Unlocked[i], to: object.Unlocked[0], value: 0.9*object.Balances[i]};
         batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
           responseCount++;
           if(err) { 

@@ -27,10 +27,16 @@ module.exports.start = function(seq) {
       let transactions = result.transactions;
       result.repeater = repeater;
       result.txOptions = {
-        numBatchTransactions: 2,//number of transactions in batch (also number of accounts used)
-        txValue: 10,// transaction value
+        transactions: []
       };
-      transactions.SendBatch(result);
+      for (let i = 0; i < 2; i++) {
+        result.txOptions.transactions.push({
+          from: result.accounts.Unlocked[i],
+          to: result.accounts.Unlocked[i],
+          value: 10
+        });
+      }
+      transactions.SendBatch(result); // no cb passed to indicate called from within repeater
     }, 2, 1, function() {
       cb(null, result);
     });
