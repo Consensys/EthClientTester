@@ -1,53 +1,108 @@
-var async = require('async');
-var init = require('./init.js');
+var cluster = require('cluster');
 var config = require('./config.js');
+var run = require('./run.js');
 
-function start() {
-  let results = [];
-  for (let index = 0; index < config.nodes.length; index++) {
-    results[index] = {};
-    results[index].web3RPCHost = config.nodes[index].web3RPCHost;
-    results[index].web3RPCPort = config.nodes[index].web3RPCPort;
-    results[index].accounts = new (require('./accounts.js'));
-    results[index].contracts = new (require('./contracts.js'));
-    results[index].transactions = new (require('./transactions.js'));
+let numNodes = config.nodes.length;
+let numTests = config.tests.length;
+
+if (cluster.isMaster) {
+  let numWorkers = numNodes;
+  let workers = [];
+  let testIndex = 0;
+
+  function isLastWorkerToBeInitialized(worker) {
+    let isLastToBeInitialized = false;
+    let initializedCount = numWorkers;
+    for (let index = 0; index < numWorkers; index++) {
+      if (!workers[index].isInitialized) {
+        initializedCount--;
+      }
+    }
+    if (initializedCount == numWorkers - 1) {
+      isLastToBeInitialized = true;
+    }
+    worker.isInitialized = true;
+    return isLastToBeInitialized;
   }
 
-  let parTasks = [];
-  for (let index = 0; index < results.length; index++) {
-    parTasks.push(function(callback) {
-      let result = results[index];
-      let seqTasks = [
-        function(callback) { callback(null, result) },
-        init.Web3RPCTimeout,
-        init.ExtendWeb3,
-        result.accounts.Sync
-      ];
-      for (let index = 0; index < config.tests.length; index++) {
-        seqTasks = config.tests[index].add(seqTasks);
-        if (index < config.tests.length-1) {
-          seqTasks.push(function(result, cb) {
-            result.accounts.Sync(result,cb);
-          });
+  function isLastWorkerToBePrepared(worker) {
+    let isLastToBePrepared = false;
+    let preparedCount = numWorkers;
+    for (let index = 0; index < numWorkers; index++) {
+      if (!workers[index].isPrepared) {
+        preparedCount--;
+      }
+    }
+    if (preparedCount == numWorkers - 1) {
+      isLastToBePrepared = true;
+    }
+    worker.isPrepared = true;
+    return isLastToBePrepared;
+  }
+
+  function prepareAllWorkers() {
+    for (let index = 0; index < numWorkers; index++) {
+      workers[index].send({command: 'prepare', params: [testIndex]});
+    }
+  }
+
+  function startAllWorkers() {
+    for (let index = 0; index < numWorkers; index++) {
+      workers[index].send({command: 'start', params: [testIndex]});
+    }
+  }
+  
+  for (let index = 0; index < numWorkers; index++) {
+    let worker = cluster.fork();
+    worker.isInitialized = false;
+    worker.isPrepared = false;
+    worker.isStarted = false;
+    worker.on('message', function(res) {
+      if (res.completed == true) {
+        if (res.msg.command == 'initialize') {
+          if (isLastWorkerToBeInitialized(worker)) {
+            prepareAllWorkers();
+          }
+        } else if (res.msg.command == 'prepare') {
+          if (isLastWorkerToBePrepared(worker)) {
+            startAllWorkers();
+          }
         }
       }
-      async.waterfall(seqTasks, function(err, res) {
-        if (err) { 
-          console.log("ERROR in parallel task " + index, err);
-          callback(err, null); 
-        } else {
-          callback(null, 1); 
-        }
-      });
     });
+    workers.push(worker);
+    worker.send({command: 'initialize', params: [index]});
+  }
+  
+} else {
+  let nodeIndex = -1;
+  let testIndex = -1;
+  let res;
+  
+  function handleWorkCompleted() {
+    res.completed = true;
+    process.send(res);
   }
 
-  async.parallel(parTasks, function(err, res) {
-    if (err) {
-    } else {
-      console.log("[INFO] All tasks sucessfully completed. Exiting...");
+  process.on('message', function(msg) {
+    res = {};
+    if (msg.command == 'initialize') {
+      nodeIndex = msg.params[0];
+      res.nodeIndex = nodeIndex;
+      res.msg = msg;
+      run.Initialize(nodeIndex, handleWorkCompleted);
+    } else if (msg.command == 'prepare') {
+      testIndex = msg.params[0];
+      res.nodeIndex = nodeIndex;
+      res.testIndex = testIndex;
+      res.msg = msg;
+      run.Prepare(nodeIndex, testIndex, handleWorkCompleted);
+    } else if (msg.command == 'start') {
+      testIndex = msg.params[0];
+      res.testIndex = testIndex;
+      res.nodeIndex = nodeIndex;
+      res.msg = msg;
+      run.Start(nodeIndex, testIndex, handleWorkCompleted);
     }
   });
 }
-
-start();
