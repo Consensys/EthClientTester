@@ -1,8 +1,9 @@
 var scheduler = require('../scheduler.js');
 var ERC20 = require('../contracts/ERC20.js');
 
-let frequency = 50;
-let numIterations = 50;
+let numBatchTransactions = 1;
+let frequency = 10;
+let numIterations = 50000000000;
 
 module.exports.prepare = function(seq) {
   seq.push(function(result, cb) {
@@ -23,16 +24,15 @@ module.exports.prepare = function(seq) {
     }
     result.contracts.Deploy(result, cb);
   });
-}
-
-module.exports.execute = function(seq) {
   seq.push(function(result, cb) {
     let contracts = result.contracts;
     let accounts = result.accounts;
-    console.log("Balance 0:" + contracts.Deployed[0].balanceOf(accounts.Unlocked[0]));
-    console.log("Balance 1:" + contracts.Deployed[0].balanceOf(accounts.Unlocked[1]));
+    contracts.Deployed[0].transfer(accounts.Unlocked[1], 50, {from: accounts.Unlocked[0]});
     cb(null, result);
   });
+}
+
+module.exports.execute = function(seq) {
   seq.push(function(result, cb) {
     scheduler.Repeat(function(repeater) {
       let transactions = result.transactions;
@@ -42,19 +42,17 @@ module.exports.execute = function(seq) {
       result.txOptions = {
         transactions: []
       };
-      let tx = contracts.Deployed[0].transfer.getTx(accounts.Unlocked[1], 1, 
+      let tx1 = contracts.Deployed[0].transfer.getTx(accounts.Unlocked[1], 1, 
         {from: accounts.Unlocked[0], gas: 100000});
-      result.txOptions.transactions.push(tx);
+      let tx2 = contracts.Deployed[0].transfer.getTx(accounts.Unlocked[0], 1, 
+        {from: accounts.Unlocked[1], gas: 100000});
+      for (let i = 0; i < numBatchTransactions; i++) {
+        result.txOptions.transactions.push(tx1);
+        result.txOptions.transactions.push(tx2);
+      }
       transactions.SendBatch(result); // no cb passed to indicate that called from within repeater
     }, numIterations, frequency, function() {
       cb(null, result);
     });
-  });
-  seq.push(function(result, cb) {
-    let contracts = result.contracts;
-    let accounts = result.accounts;
-    console.log("Balance 0:" + contracts.Deployed[0].balanceOf(accounts.Unlocked[0]));
-    console.log("Balance 1:" + contracts.Deployed[0].balanceOf(accounts.Unlocked[1]));
-    cb(null, result);
   });
 }
