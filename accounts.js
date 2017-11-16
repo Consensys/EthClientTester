@@ -28,7 +28,8 @@ function accounts() {
     let accountOptions = result.accountOptions;
     let numRequiredAccounts = accountOptions.numRequiredAccounts;
     
-    if (numCurrentAccounts < numRequiredAccounts) {
+    if ((numCurrentAccounts < numRequiredAccounts) && 
+      (config.doAccountCreation === true)) {
       async.whilst(function() {
         return (numCurrentAccounts < numRequiredAccounts);
       }, function(callback) {
@@ -65,23 +66,28 @@ function accounts() {
     
     //stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
     //  ` / ` + numRequiredAccounts);
-    async.eachLimit(requiredAccounts, config.accountUnlockThreadLimit, 
-    function(account, callback) {
-      web3.personal.unlockAccount(account, "", 100000, function(err, res) {
-        object.Unlocked[object.Existing.indexOf(account)] = account;
-        numUnlockedAccounts++;
-        //stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
-        //  ` / ` + numRequiredAccounts);
-        callback(err);
-      });     
-    }, function(err) {
-      if (err) {
-        cb(err, null);
-      } else {
-        //console.log();
-        cb(null, result);
-      }
-    });
+    if ((numUnlockedAccounts < numRequiredAccounts)
+      && (config.doAccountUnlocking === true)) {
+      async.eachLimit(requiredAccounts, config.accountUnlockThreadLimit, 
+      function(account, callback) {
+        web3.personal.unlockAccount(account, "", 100000, function(err, res) {
+          object.Unlocked[object.Existing.indexOf(account)] = account;
+          numUnlockedAccounts++;
+          //stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
+          //  ` / ` + numRequiredAccounts);
+          callback(err);
+        });     
+      }, function(err) {
+        if (err) {
+          cb(err, null);
+        } else {
+          //console.log();
+          cb(null, result);
+        }
+      });
+    } else {
+      cb(null, result);
+    }
   }
 
   /*This function assumes that the required accounts are already unlocked on the node,
@@ -152,23 +158,27 @@ function accounts() {
     
     //stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
     //  ` / ` + numExistingAccounts);
-    async.eachLimit(object.Existing, config.accountUnlockThreadLimit, 
-    function(account, callback) {
-      web3.personal.unlockAccount(account, "", 100000, function(err, res) {
-        object.Unlocked[object.Existing.indexOf(account)] = account;
-        numUnlockedAccounts++;
-        //stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
-        //  ` / ` + numExistingAccounts);
-        callback(err, res);
-      });     
-    }, function(err) {
-      if (err) {
-        cb(err, null);
-      } else {
-        //console.log();
-        cb(null, result);
-      }
-    });
+    if (config.doAccountUnlocking === true) {
+      async.eachLimit(object.Existing, config.accountUnlockThreadLimit, 
+      function(account, callback) {
+        web3.personal.unlockAccount(account, "", 100000, function(err, res) {
+          object.Unlocked[object.Existing.indexOf(account)] = account;
+          numUnlockedAccounts++;
+          //stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
+          //  ` / ` + numExistingAccounts);
+          callback(err, res);
+        });     
+      }, function(err) {
+        if (err) {
+          cb(err, null);
+        } else {
+          //console.log();
+          cb(null, result);
+        }
+      });
+    } else {
+      cb(null, result);
+    }
   }
     
   function getBalances(result, cb) {
@@ -245,31 +255,35 @@ function accounts() {
     let numRequiredAccounts = accountOptions.numRequiredAccounts;
     // at object point it should not be possible to have numRequiredAccounts > existing.length
     let requiredAccounts = object.Unlocked.slice(0, numRequiredAccounts);
-    let responseCount = 0;
-    let requestCount = 0;
-    let batch = web3.createBatch();
-    for (let i = 1; i < numRequiredAccounts; i++) {
-      if (object.Balances[i] > 0) {
-        requestCount++;
-        let tx = {from: requiredAccounts[i], to: requiredAccounts[0], value: 0.9*object.Balances[i]};
-        batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
-          responseCount++;
-          if(err) { 
-            //console.log("ERROR:", err);
-            cb(err, null);
-          } else {
-            //stdout.write(`\r[INFO] Collecting funds: ` + responseCount + 
-            //  ` / ` + requestCount);
-            if (responseCount == requestCount) {
-              //console.log();
-              cb(null, result);
+    if (config.doEtherDistribution === true) {
+      let responseCount = 0;
+      let requestCount = 0;
+      let batch = web3.createBatch();
+      for (let i = 1; i < numRequiredAccounts; i++) {
+        if (object.Balances[i] > 0) {
+          requestCount++;
+          let tx = {from: requiredAccounts[i], to: requiredAccounts[0], value: 0.9*object.Balances[i]};
+          batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
+            responseCount++;
+            if(err) { 
+              //console.log("ERROR:", err);
+              cb(err, null);
+            } else {
+              //stdout.write(`\r[INFO] Collecting funds: ` + responseCount + 
+              //  ` / ` + requestCount);
+              if (responseCount == requestCount) {
+                //console.log();
+                cb(null, result);
+              }
             }
-          }
-        }));
+          }));
+        }
       }
-    }
-    if (requestCount > 0) {
-      batch.execute();
+      if (requestCount > 0) {
+        batch.execute();
+      } else {
+        cb(null, result);
+      }
     } else {
       cb(null, result);
     }
@@ -279,30 +293,34 @@ function accounts() {
     let stdout = process.stdout;
     let web3 = result.web3;
     let numExistingAccounts = object.Existing.length;
-    let responseCount = 0;
-    let requestCount = 0;
-    let batch = web3.createBatch();
-    for (let i = 1; i < numExistingAccounts; i++) {
-      if (object.Balances[i] > 0) {
-        requestCount++;
-        let tx = {from: object.Unlocked[i], to: object.Unlocked[0], value: 0.9*object.Balances[i]};
-        batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
-          responseCount++;
-          if(err) { 
-            cb(err, null);
-          } else {
-            //stdout.write(`\r[INFO] Collecting funds: ` + responseCount + 
-            //  ` / ` + requestCount);
-            if (responseCount == requestCount) {
-              //console.log();
-              cb(null, result);
+    if (config.doEtherDistribution === true) {
+      let responseCount = 0;
+      let requestCount = 0;
+      let batch = web3.createBatch();
+      for (let i = 1; i < numExistingAccounts; i++) {
+        if (object.Balances[i] > 0) {
+          requestCount++;
+          let tx = {from: object.Unlocked[i], to: object.Unlocked[0], value: 0.9*object.Balances[i]};
+          batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
+            responseCount++;
+            if(err) { 
+              cb(err, null);
+            } else {
+              //stdout.write(`\r[INFO] Collecting funds: ` + responseCount + 
+              //  ` / ` + requestCount);
+              if (responseCount == requestCount) {
+                //console.log();
+                cb(null, result);
+              }
             }
-          }
-        }));
+          }));
+        }
       }
-    }
-    if (requestCount > 0) {
-      batch.execute();
+      if (requestCount > 0) {
+        batch.execute();
+      } else {
+        cb(null, result);
+      }
     } else {
       cb(null, result);
     }
@@ -315,35 +333,39 @@ function accounts() {
     let accountOptions = result.accountOptions;
     let numRequiredAccounts = accountOptions.numRequiredAccounts;
     // at object point it should not be possible to have numRequiredAccounts > existing.length
-    let requiredAccounts = object.Existing.slice(0, numRequiredAccounts);
-    let requiredAccountBalances = Math.floor(object.Balances[0]/numRequiredAccounts);
-    let responseCount = 0;
-    let requestCount = 0;
-    let batch = web3.createBatch();
-    //stdout.write(`\r[INFO] Accounts funded: ` + 1 + 
-    //  ` / ` + numRequiredAccounts);
-    for (let i = 1; i < numRequiredAccounts; i++) {
-      requestCount++;
-      let tx = { from: object.Unlocked[0], to: object.Unlocked[i], value: requiredAccountBalances };
-      batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
-        responseCount++;
-        if(err) { 
-          //console.log("ERROR", err);
-          cb(err, null);
-        } else {
-          //stdout.write(`\r[INFO] Funding Accounts: ` + (responseCount+1) + 
-          //  ` / ` + numRequiredAccounts);
-          if (responseCount == requestCount) {
-            //console.log();
-            cb(null, result);
+    if (config.doEtherDistribution === true) {
+      let requiredAccounts = object.Existing.slice(0, numRequiredAccounts);
+      let requiredAccountBalances = Math.floor(object.Balances[0]/numRequiredAccounts);
+      let responseCount = 0;
+      let requestCount = 0;
+      let batch = web3.createBatch();
+      //stdout.write(`\r[INFO] Accounts funded: ` + 1 + 
+      //  ` / ` + numRequiredAccounts);
+      for (let i = 1; i < numRequiredAccounts; i++) {
+        requestCount++;
+        let tx = { from: object.Unlocked[0], to: object.Unlocked[i], value: requiredAccountBalances };
+        batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
+          responseCount++;
+          if(err) { 
+            //console.log("ERROR", err);
+            cb(err, null);
+          } else {
+            //stdout.write(`\r[INFO] Funding Accounts: ` + (responseCount+1) + 
+            //  ` / ` + numRequiredAccounts);
+            if (responseCount == requestCount) {
+              //console.log();
+              cb(null, result);
+            }
           }
-        }
-      }));
-    }
-    if (requestCount > 0) {
-      batch.execute();
+        }));
+      }
+      if (requestCount > 0) {
+        batch.execute();
+      } else {
+        //console.log();
+        cb(null, result);
+      }
     } else {
-      //console.log();
       cb(null, result);
     }
   }
