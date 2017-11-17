@@ -1,3 +1,4 @@
+var path = require('path');
 var config = {}
 
 /*  Connection settings
@@ -23,10 +24,14 @@ config.tests = [
   //require('./tests/etherTransactionExample1.js')
 ];
 
-/* When using testrpc, the number of accounts
-   will need to be specified when testrpc is
-   started (use the -a=... option), and these 
-   accounts will all be unlocked automatically.
+/*  Path to the root log directory
+*/
+config.logPathRoot = path.resolve(__dirname, 'logs');
+
+/*  When using testrpc, the number of accounts
+    will need to be specified when testrpc is
+    started (use the -a=... option), and these 
+    accounts will all be unlocked automatically.
 */
 /*  Number of accounts on test node that are always
     automatically unlocked when node starts (this is
@@ -39,8 +44,8 @@ config.numInitiallyUnlockedAccounts = 0;
     have already been created/unlocked
 */
 config.doAccountCreation = true;
-config.doAccountUnlocking = false;
-config.doEtherRedistribution = false;
+config.doAccountUnlocking = true;
+config.doEtherRedistribution = true;
 
 /*  Miscellaneous settings
 */

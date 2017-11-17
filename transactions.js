@@ -15,7 +15,8 @@ function transactions() {
     let accounts = result.accounts;
     let requestCount = 0;
     let responseCount = 0;
-  
+    let batchRequestTimestamp;
+
     let transactions = txOptions.transactions;
 
     function handleTransactionResponse(err, res) {
@@ -25,7 +26,14 @@ function transactions() {
         console.log("TX ERROR", err);
         object.NumSendErrors++;
       } else {
-        object.SentTxHashes.push(txHash);
+        //object.SentTxHashes.push(txHash);
+        result.log.AppendTxHashRequest({
+          timestamp: batchRequestTimestamp,
+          msg: txHash
+        });
+        result.log.AppendTxHashResponse({
+          msg: txHash
+        });
       }
       if (responseCount == requestCount) {
         // signal to the repeater that this task has been completed.
@@ -45,10 +53,14 @@ function transactions() {
           handleTransactionResponse(err, res);
         }));
       }
-      //if (result.repeater) {
-      //  result.repeater.displayProgress("Sending Transaction Batch");
-      //}
+      result.log.AppendStatusUpdate({
+        msg: 'Sending Transaction Batch...'
+      });
+      batchRequestTimestamp = Date.now();
       batch.execute();
+      result.log.AppendStatusUpdate({
+        msg: 'Done.'
+      });
     }
     createAndExecuteBatch();
   }

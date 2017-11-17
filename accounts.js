@@ -12,17 +12,21 @@ function accounts() {
   function sync(result, cb) {
     let stdout = process.stdout;
     let web3 = result.web3;
-    //stdout.write(`\r[INFO] Synchronizing account data... `);
+    result.log.AppendStatusUpdate({
+      msg: 'Synchronizing account data...'
+    });
     object.Existing = web3.eth.accounts;
-    //result.showProgressGetAllBalances = false;
-    object.GetAllBalances(result, cb);
-    //console.log("Done.");
+    object.GetAllBalances(result, function(err, res) {
+      result.log.AppendStatusUpdate({
+        msg: 'Done.'
+      });
+      cb(null, res);
+    });
   }
 
   function create(result, cb) {
     let stdout = process.stdout;
     let web3 = result.web3;
-    //object.Existing = web3.eth.accounts;
     let numExistingAccounts = object.Existing.length;
     let numCurrentAccounts = numExistingAccounts;
     let accountOptions = result.accountOptions;
@@ -35,8 +39,9 @@ function accounts() {
       }, function(callback) {
         web3.personal.newAccount("", function(err, res) {
           numCurrentAccounts++;
-         // stdout.write(`\r[INFO] Creating accounts: ` + numCurrentAccounts + 
-         //   ` / ` + numRequiredAccounts);
+          result.log.AppendStatusUpdate({
+            msg: 'Creating accounts: ' + numCurrentAccounts + ' / ' + numRequiredAccounts
+          });
           callback(err, res);
         });
       }, function(err) {
@@ -44,12 +49,13 @@ function accounts() {
           cb(err, null);
         } else {
           object.Existing = web3.eth.accounts;
-          //console.log();
           cb(null, result);
         }
       });
     } else {
-      //console.log("[INFO] Skipping account creation: No additional accounts needed");
+      result.log.AppendStatusUpdate({
+        msg: 'Skipping account creation: numExistingAccounts >= numRequiredAccounts'
+      });
       cb(null, result);
     }
   }
@@ -64,24 +70,25 @@ function accounts() {
     let requiredAccounts = object.Existing.slice(0, numRequiredAccounts);
     let numUnlockedAccounts = object.Unlocked.length;
     
-    //stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
-    //  ` / ` + numRequiredAccounts);
     if ((numUnlockedAccounts < numRequiredAccounts)
       && (config.doAccountUnlocking === true)) {
+      result.log.AppendStatusUpdate({
+        msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
+      });
       async.eachLimit(requiredAccounts, config.accountUnlockThreadLimit, 
       function(account, callback) {
         web3.personal.unlockAccount(account, "", 100000, function(err, res) {
           object.Unlocked[object.Existing.indexOf(account)] = account;
           numUnlockedAccounts++;
-          //stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
-          //  ` / ` + numRequiredAccounts);
+          result.log.AppendStatusUpdate({
+            msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
+          });
           callback(err);
         });     
       }, function(err) {
         if (err) {
           cb(err, null);
         } else {
-          //console.log();
           cb(null, result);
         }
       });
@@ -101,14 +108,16 @@ function accounts() {
     let requiredAccounts = object.Existing.slice(0, numRequiredAccounts);
     let numUnlockedAccounts = object.Unlocked.length;
       
-    //stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
-    //  ` / ` + numRequiredAccounts);
+    result.log.AppendStatusUpdate({
+      msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
+    });
     async.eachLimit(requiredAccounts, config.accountUnlockThreadLimit,
     function(account, callback) {
       object.Unlocked[object.Existing.indexOf(account)] = account;
       numUnlockedAccounts++;
-      //stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
-      //  ` / ` + numRequiredAccounts);
+      result.log.AppendStatusUpdate({
+        msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
+      });
       callback(null);
     }, function(err) {
       if (err) {
@@ -131,14 +140,16 @@ function accounts() {
     let requiredAccounts = object.Existing.slice(0, numRequiredAccounts);
     let numUnlockedAccounts = object.Unlocked.length;
       
-    //stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
-    //  ` / ` + numRequiredAccounts);
+    result.log.AppendStatusUpdate({
+      msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
+    });
     async.eachLimit(requiredAccounts, config.accountUnlockThreadLimit,
     function(account, callback) {
       object.Unlocked[object.Existing.indexOf(account)] = account;
       numUnlockedAccounts++;
-      //stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
-      //  ` / ` + numRequiredAccounts);
+      result.log.AppendStatusUpdate({
+        msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
+      });
       callback(null);
     }, function(err) {
       if (err) {
@@ -156,23 +167,24 @@ function accounts() {
     let numExistingAccounts = object.Existing.length;
     let numUnlockedAccounts = object.Unlocked.length;
     
-    //stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
-    //  ` / ` + numExistingAccounts);
+    result.log.AppendStatusUpdate({
+      msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
+    });
     if (config.doAccountUnlocking === true) {
       async.eachLimit(object.Existing, config.accountUnlockThreadLimit, 
       function(account, callback) {
         web3.personal.unlockAccount(account, "", 100000, function(err, res) {
           object.Unlocked[object.Existing.indexOf(account)] = account;
           numUnlockedAccounts++;
-          //stdout.write(`\r[INFO] Unlocking accounts: ` + numUnlockedAccounts + 
-          //  ` / ` + numExistingAccounts);
+          result.log.AppendStatusUpdate({
+            msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
+          });
           callback(err, res);
         });     
       }, function(err) {
         if (err) {
           cb(err, null);
         } else {
-          //console.log();
           cb(null, result);
         }
       });
@@ -201,10 +213,10 @@ function accounts() {
           object.Balances[object.Existing.indexOf(account)] = res.toNumber(); 
           object.TotalBalance += res.toNumber();
         }
-        //stdout.write(`\r[INFO] Getting account balances: ` + responseCount + 
-        //  ` / ` + numRequiredAccounts);
+        result.log.AppendStatusUpdate({
+          msg: 'Getting account balances: ' + responseCount + ' / ' + numRequiredAccounts
+        });
         if (responseCount == requestCount) {
-          //console.log();
           cb(null, result);
         }
         callback(err, res);
@@ -217,10 +229,6 @@ function accounts() {
     let stdout = process.stdout;
     let web3 = result.web3;
     let numExistingAccounts = object.Existing.length;
-    //let showProgress = true;
-    //if (result.showProgressGetAllBalances == false) {
-    //  showProgress = false;
-    //}
     let responseCount = 0;
     let requestCount = 0;
     async.eachLimit(object.Existing, 5, function(account, callback) {
@@ -233,12 +241,10 @@ function accounts() {
           object.Balances[object.Existing.indexOf(account)] = res.toNumber(); 
           object.TotalBalance += res.toNumber();
         }
-        //if (showProgress) {
-        //  stdout.write(`\r[INFO] Getting account balances: ` + responseCount + 
-        //    ` / ` + numExistingAccounts);
-        //}
+        result.log.AppendStatusUpdate({
+          msg: 'Getting account balances: ' + responseCount + ' / ' + numExistingAccounts
+        });
         if (responseCount == requestCount) {
-          //if (showProgress) { console.log(); }
           cb(null, result);
         }
         callback(err, res);
@@ -269,10 +275,10 @@ function accounts() {
               //console.log("ERROR:", err);
               cb(err, null);
             } else {
-              //stdout.write(`\r[INFO] Collecting funds: ` + responseCount + 
-              //  ` / ` + requestCount);
+              result.log.AppendStatusUpdate({
+                msg: 'Collecting funds: ' + responseCount + ' / ' + requestCount
+              });
               if (responseCount == requestCount) {
-                //console.log();
                 cb(null, result);
               }
             }
@@ -306,10 +312,10 @@ function accounts() {
             if(err) { 
               cb(err, null);
             } else {
-              //stdout.write(`\r[INFO] Collecting funds: ` + responseCount + 
-              //  ` / ` + requestCount);
+              result.log.AppendStatusUpdate({
+                msg: 'Collecting funds: ' + responseCount + ' / ' + requestCount
+              });
               if (responseCount == requestCount) {
-                //console.log();
                 cb(null, result);
               }
             }
@@ -339,8 +345,9 @@ function accounts() {
       let responseCount = 0;
       let requestCount = 0;
       let batch = web3.createBatch();
-      //stdout.write(`\r[INFO] Accounts funded: ` + 1 + 
-      //  ` / ` + numRequiredAccounts);
+      result.log.AppendStatusUpdate({
+        msg: 'Funding accounts: ' + 1 + ' / ' + numRequiredAccounts
+      });
       for (let i = 1; i < numRequiredAccounts; i++) {
         requestCount++;
         let tx = { from: object.Unlocked[0], to: object.Unlocked[i], value: requiredAccountBalances };
@@ -350,10 +357,10 @@ function accounts() {
             //console.log("ERROR", err);
             cb(err, null);
           } else {
-            //stdout.write(`\r[INFO] Funding Accounts: ` + (responseCount+1) + 
-            //  ` / ` + numRequiredAccounts);
+            result.log.AppendStatusUpdate({
+              msg: 'Funding accounts: ' + (responseCount+1) + ' / ' + numRequiredAccounts
+            });
             if (responseCount == requestCount) {
-              //console.log();
               cb(null, result);
             }
           }
@@ -362,7 +369,6 @@ function accounts() {
       if (requestCount > 0) {
         batch.execute();
       } else {
-        //console.log();
         cb(null, result);
       }
     } else {
