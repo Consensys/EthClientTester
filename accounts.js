@@ -46,6 +46,9 @@ function accounts() {
         });
       }, function(err) {
         if (err) {
+          result.log.AppendError({
+            msg: 'ERROR in accounts.create: ' + err
+          });
           cb(err, null);
         } else {
           object.Existing = web3.eth.accounts;
@@ -87,6 +90,9 @@ function accounts() {
         });     
       }, function(err) {
         if (err) {
+          result.log.AppendError({
+            msg: 'ERROR in accounts.unlock: ' + err
+          });
           cb(err, null);
         } else {
           cb(null, result);
@@ -121,6 +127,9 @@ function accounts() {
       callback(null);
     }, function(err) {
       if (err) {
+        result.log.AppendError({
+          msg: 'ERROR in accounts.updateRequiredToUnlocked: ' + err
+        });
         cb(err, null);
       } else {
         //console.log();
@@ -153,6 +162,9 @@ function accounts() {
       callback(null);
     }, function(err) {
       if (err) {
+        result.log.AppendError({
+          msg: 'ERROR in accounts.updateAllExistingToUnlocked: ' + err
+        });
         cb(err, null);
       } else {
         //console.log();
@@ -183,6 +195,9 @@ function accounts() {
         });     
       }, function(err) {
         if (err) {
+          result.log.AppendError({
+            msg: 'ERROR in accounts.unlockAll: ' + err
+          });
           cb(err, null);
         } else {
           cb(null, result);
@@ -207,7 +222,9 @@ function accounts() {
       requestCount++;
       web3.eth.getBalance(account, function(err, res) {
         if (err) { 
-          //console.log("ERROR", err); 
+          result.log.AppendError({
+            msg: 'ERROR in accounts.getBalances: ' + err
+          }); 
         } else { 
           responseCount++;
           object.Balances[object.Existing.indexOf(account)] = res.toNumber(); 
@@ -235,7 +252,9 @@ function accounts() {
       requestCount++;
       web3.eth.getBalance(account, function(err, res) {
         if (err) { 
-          //console.log("ERROR", err); 
+          result.log.AppendError({
+            msg: 'ERROR in accounts.getAllBalances: ' + err
+          });
         } else { 
           responseCount++;
           object.Balances[object.Existing.indexOf(account)] = res.toNumber(); 
@@ -272,7 +291,9 @@ function accounts() {
           batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
             responseCount++;
             if(err) { 
-              //console.log("ERROR:", err);
+              result.log.AppendError({
+                msg: 'ERROR in accounts.collectEther: ' + err
+              });
               cb(err, null);
             } else {
               result.log.AppendStatusUpdate({
@@ -310,6 +331,9 @@ function accounts() {
           batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
             responseCount++;
             if(err) { 
+              result.log.AppendError({
+                msg: 'ERROR in accounts.collectAllEther: ' + err
+              });
               cb(err, null);
             } else {
               result.log.AppendStatusUpdate({
@@ -354,7 +378,9 @@ function accounts() {
         batch.add(web3.eth.sendTransaction.request(tx, function(err, txHash) {
           responseCount++;
           if(err) { 
-            //console.log("ERROR", err);
+            result.log.AppendError({
+              msg: 'ERROR in accounts.distributeEther: ' + err
+            });
             cb(err, null);
           } else {
             result.log.AppendStatusUpdate({

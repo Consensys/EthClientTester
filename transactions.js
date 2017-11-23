@@ -23,7 +23,9 @@ function transactions() {
       let txHash = res;
       responseCount++;
       if(err) { 
-        console.log("TX ERROR", err);
+        result.log.AppendError({
+          msg: 'ERROR in transactions.sendBatch: ' + err
+        });
         object.NumSendErrors++;
       } else {
         //object.SentTxHashes.push(txHash);

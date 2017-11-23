@@ -5,19 +5,26 @@ var config = {}
 */
 config.nodes = [
   {
-    name: "node1",
-    web3RPCHost: "10.0.0.15",
-    web3RPCPort: "20010"
-  }, {
-    name: "node2",
-    web3RPCHost: "10.0.0.16",
-    web3RPCPort: "20010"
-  }, {
-    name: "node3",
-    web3RPCHost: "10.0.0.17",
-    web3RPCPort: "20010"
+    name: "testrpc1",
+    web3RPCHost: "localhost",
+    web3RPCPort: "8545"
   }
 ];
+//config.nodes = [
+//  {
+//    name: "node1",
+//    web3RPCHost: "10.0.0.12",
+//    web3RPCPort: "20010"
+//  }, {
+//    name: "node2",
+//    web3RPCHost: "10.0.0.9",
+//    web3RPCPort: "20010"
+//  }, {
+//    name: "node3",
+//    web3RPCHost: "10.0.0.11",
+//    web3RPCPort: "20010"
+//  }
+//];
 
 config.tests = [
   require('./tests/tokenContractAsynchronuousExample1.js')

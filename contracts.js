@@ -27,16 +27,6 @@ function contracts() {
     }
     let numRequiredAccounts = result.accountOptions.numRequiredAccounts;
 
-    //function displaySummary() {
-    //  console.log("\r[INFO] Deploying contracts: " + 
-    //    object.NumDeployed + " / " + contractDataArray.length);
-    //}
-
-    //function displayProgress() {
-    //  stdout.write(`\r[INFO] Deploying contracts: ` + 
-    //    object.NumDeployed + ` / ` + contractDataArray.length);
-    //}
-
     function compileContract(contractData) {
       let relativeSourcePath = contractData.relativeSourcePath;
       let contractName = contractData.contractName;
@@ -57,6 +47,9 @@ function contracts() {
         }
         return compiledContract;
       } else {
+        result.log.AppendError({
+          msg: 'ERROR in contracts.compileContract: ' + err
+        });
         return {};
       }
     }
@@ -70,7 +63,6 @@ function contracts() {
       deploymentTx.gas = web3.eth.estimateGas(deploymentTx);
       web3.eth.sendTransaction(deploymentTx, function(err, res) {
         if (!err) { 
-          //console.log(res);
           // request the transaction receipt in order to obtain the contract address
           let receipt = web3.eth.getTransactionReceipt(res);
           if (!receipt) {
@@ -100,6 +92,9 @@ function contracts() {
             callback(null);
           }
         } else {
+          result.log.AppendError({
+            msg: 'ERROR in contracts.deployCompiledContract: ' + err
+          });
           callback(err);
         }
       });
@@ -107,11 +102,9 @@ function contracts() {
 
     function deployAllContracts() {
       async.eachLimit(contractDataArray, 1, function(contractData, callback) {
-        //displayProgress();
         let compiledContract = compileContract(contractData);
         deployCompiledContract(compiledContract, callback);
       }, function(err) {
-        //displaySummary();
         cb(null, result);
       });  
     }
