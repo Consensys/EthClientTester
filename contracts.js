@@ -66,7 +66,9 @@ function contracts() {
           // request the transaction receipt in order to obtain the contract address
           let receipt = web3.eth.getTransactionReceipt(res);
           if (!receipt) {
-            console.log("ERROR:", "Failed to get transaction receipt after deploying contract");
+            result.log.AppendError({
+              msg: 'ERROR in contracts.deployCompiledContract (no receipt): ' + err
+            });
           } else {
             let instance = contract.at(receipt.contractAddress);
             for (let i = 0; i < instance.abi.length; i++) {
