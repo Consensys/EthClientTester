@@ -1,6 +1,5 @@
 function transactions() {
   let async = require('async');
-  let metrics = require('./metrics.js');
   let config = require('./config.js');
   let object = {};
 
