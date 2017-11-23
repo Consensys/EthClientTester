@@ -5,7 +5,7 @@ var config = require('./config.js');
 var results = [];
 var date = new Date();
 var dateString = date.getUTCFullYear() + '-' + 
-  date.getUTCMonth() + '-' + date.getUTCDay() + '_' + 
+  (date.getUTCMonth() + 1) + '-' + date.getUTCDate() + '_' + 
   date.getUTCHours() + '-' + date.getUTCMinutes();
 
 for (let index = 0; index < config.nodes.length; index++) {
