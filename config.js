@@ -45,14 +45,16 @@ config.logPathRoot = path.resolve(__dirname, 'logs');
     a node setting, so numInitiallyUnlockedAccounts
     should correspond with how the node is set up)
 */
-config.numInitiallyUnlockedAccounts = 0;  
+config.numInitiallyUnlockedAccounts = 10;  
 
 /*  These can be changed if the necessary accounts 
     have already been created/unlocked
+    These will typically be false when using testrpc
+    and true when using quorum
 */
-config.doAccountCreation = true;
-config.doAccountUnlocking = true;
-config.doEtherRedistribution = true;
+config.doAccountCreation = false;
+config.doAccountUnlocking = false;
+config.doEtherRedistribution = false;
 
 /*  Miscellaneous settings
 */
@@ -60,5 +62,10 @@ config.web3RPCInitTimeoutMillis = 5000; // exits with error if it takes longer t
 config.accountUnlockThreadLimit = 5;    // number of concurrent threads limited to this
 
 config.syncUnpause = true;
+
+/*  Remote Probe settings
+*/
+config.probeDataFetchPeriod = 5*1000; // a value of 0 disables fetching of robe data
+
 
 module.exports = config
