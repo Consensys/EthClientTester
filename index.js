@@ -9,6 +9,7 @@ if (cluster.isMaster) {
   let numWorkers = numNodes;
   let workers = [];
   let testIndex = 0;
+  let intervalID = null;
 
   function isLastWorkerToBeInitialized(worker) {
     let isLastToBeInitialized = false;
@@ -59,6 +60,8 @@ if (cluster.isMaster) {
     console.log("Initializing...");
     for (let index = 0; index < numWorkers; index++) {
       workers[index].send({command: 'initialize', params: [index]});
+      // Also initialize the master thread's instance of run.Results
+      run.Initialize(index, function(){});
     }
   }
 
@@ -73,6 +76,16 @@ if (cluster.isMaster) {
     console.log("Executing...");
     for (let index = 0; index < numWorkers; index++) {
       workers[index].send({command: 'execute', params: [testIndex]});
+    }
+  }
+
+  function startFetchingProbeData() {
+    if (config.probeDataFetchPeriod > 0) {
+      intervalID = setInterval(function() {
+        for (let index = 0; index < numWorkers; index++) {
+          run.Results[index].metrics.Fetch(run.Results[index], function(){});
+        }
+      }, config.probeDataFetchPeriod);
     }
   }
   
@@ -90,12 +103,14 @@ if (cluster.isMaster) {
           }
         } else if (res.msg.command == 'prepare') {
           if (isLastWorkerToBePrepared(worker)) {
+            startFetchingProbeData();
             startAllWorkers();
           }
         } else if (res.msg.command == 'execute') {
           if (isLastWorkerToBeFinished(worker)) {
             console.log("Exiting...")
             cluster.disconnect(function() {
+              clearInterval(intervalID);
               console.log("Bye!");
             });
           }
@@ -106,7 +121,7 @@ if (cluster.isMaster) {
   }
 
   initializeAllWorkers();
-  
+
 } else {
   let nodeIndex = -1;
   let testIndex = -1;
