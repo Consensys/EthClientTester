@@ -3,28 +3,31 @@ var config = {}
 
 /*  Connection settings
 */
-config.nodes = [
-  {
-    name: "testrpc1",
-    web3RPCHost: "localhost",
-    web3RPCPort: "8545"
-  }
-];
 //config.nodes = [
 //  {
-//    name: "node1",
-//    web3RPCHost: "10.0.0.12",
-//    web3RPCPort: "20010"
-//  }, {
-//    name: "node2",
-//    web3RPCHost: "10.0.0.9",
-//    web3RPCPort: "20010"
-//  }, {
-//    name: "node3",
-//    web3RPCHost: "10.0.0.11",
-//    web3RPCPort: "20010"
+//    name: "testrpc1",
+//    web3RPCHost: "localhost",
+//    web3RPCPort: "8545"
 //  }
 //];
+config.nodes = [
+  {
+    name: "node1",
+    web3RPCHost: "10.0.0.12",
+    web3RPCPort: "20010",
+    source: true
+  }, {
+    name: "node2",
+    web3RPCHost: "10.0.0.9",
+    web3RPCPort: "20010",
+    source: false
+  }, {
+    name: "node3",
+    web3RPCHost: "10.0.0.11",
+    web3RPCPort: "20010",
+    source: false
+  }
+];
 
 config.tests = [
   require('./tests/tokenContractAsynchronuousExample1.js')
@@ -45,16 +48,16 @@ config.logPathRoot = path.resolve(__dirname, 'logs');
     a node setting, so numInitiallyUnlockedAccounts
     should correspond with how the node is set up)
 */
-config.numInitiallyUnlockedAccounts = 10;  
+config.numInitiallyUnlockedAccounts = 0;  
 
 /*  These can be changed if the necessary accounts 
     have already been created/unlocked
     These will typically be false when using testrpc
     and true when using quorum
 */
-config.doAccountCreation = false;
-config.doAccountUnlocking = false;
-config.doEtherRedistribution = false;
+config.doAccountCreation = true;
+config.doAccountUnlocking = true;
+config.doEtherRedistribution = true;
 
 /*  Miscellaneous settings
 */

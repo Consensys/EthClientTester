@@ -58,19 +58,27 @@ function initialize(nodeIndex, cb) {
 }
 
 function prepare(nodeIndex, testIndex, cb) {
-  let numTests = config.tests.length;
   let result = results[nodeIndex];
-  let seq = [function(callback) { callback(null, result); }];
-  config.tests[testIndex].prepare(seq);
-  doSequence(seq, cb);
+  if (config.nodes[nodeIndex].source === true) {
+    let numTests = config.tests.length;
+    let seq = [function(callback) { callback(null, result); }];
+    config.tests[testIndex].prepare(seq);
+    doSequence(seq, cb);
+  } else {
+    cb(null, result);
+  }
 }
 
 function execute(nodeIndex, testIndex, cb) {
-  let numTests = config.tests.length;
   let result = results[nodeIndex];
-  let seq = [function(callback) { callback(null, result); }];
-  config.tests[testIndex].execute(seq);
-  doSequence(seq, cb);
+  if (config.nodes[nodeIndex].source === true) {
+    let numTests = config.tests.length;
+    let seq = [function(callback) { callback(null, result); }];
+    config.tests[testIndex].execute(seq);
+    doSequence(seq, cb);
+  } else {
+    cb(null, result);
+  }
 }
 
 module.exports.Initialize = initialize;
