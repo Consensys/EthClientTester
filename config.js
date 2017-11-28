@@ -15,17 +15,17 @@ config.nodes = [
     name: "node1",
     web3RPCHost: "10.0.0.12",
     web3RPCPort: "20010",
-    source: true
+    genTraffic: true
   }, {
     name: "node2",
     web3RPCHost: "10.0.0.9",
     web3RPCPort: "20010",
-    source: false
+    genTraffic: true
   }, {
     name: "node3",
     web3RPCHost: "10.0.0.11",
     web3RPCPort: "20010",
-    source: false
+    genTraffic: true
   }
 ];
 

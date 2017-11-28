@@ -59,7 +59,7 @@ function initialize(nodeIndex, cb) {
 
 function prepare(nodeIndex, testIndex, cb) {
   let result = results[nodeIndex];
-  if (config.nodes[nodeIndex].source === true) {
+  if (config.nodes[nodeIndex].genTraffic === true) {
     let numTests = config.tests.length;
     let seq = [function(callback) { callback(null, result); }];
     config.tests[testIndex].prepare(seq);
@@ -71,7 +71,7 @@ function prepare(nodeIndex, testIndex, cb) {
 
 function execute(nodeIndex, testIndex, cb) {
   let result = results[nodeIndex];
-  if (config.nodes[nodeIndex].source === true) {
+  if (config.nodes[nodeIndex].genTraffic === true) {
     let numTests = config.tests.length;
     let seq = [function(callback) { callback(null, result); }];
     config.tests[testIndex].execute(seq);
