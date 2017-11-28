@@ -72,35 +72,103 @@ function accounts() {
     // at object point it should not be possible to have numRequiredAccounts > existing.length
     let requiredAccounts = object.Existing.slice(0, numRequiredAccounts);
     let numUnlockedAccounts = object.Unlocked.length;
-    
-    if ((numUnlockedAccounts < numRequiredAccounts)
-      && (config.doAccountUnlocking === true)) {
-      result.log.AppendStatusUpdate({
-        msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
-      });
-      async.eachLimit(requiredAccounts, config.accountUnlockThreadLimit, 
-      function(account, callback) {
-        web3.personal.unlockAccount(account, "", 100000, function(err, res) {
-          object.Unlocked[object.Existing.indexOf(account)] = account;
-          numUnlockedAccounts++;
-          result.log.AppendStatusUpdate({
-            msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
+    let numInitiallyUnlockedAccounts = config.numInitiallyUnlockedAccounts
+      
+    if (numInitiallyUnlockedAccounts > 0) {
+      updateInitiallyUnlockedToUnlocked(result, function(err, result) {
+        numUnlockedAccounts = object.Unlocked.length;
+        console.log("numUnlockedAccounts", numUnlockedAccounts);
+        console.log("numRequiredAccounts", numRequiredAccounts);
+        if (numUnlockedAccounts < numRequiredAccounts) {
+          let accountsToUnlock = object.Existing.slice(numInitiallyUnlockedAccounts-1, numRequiredAccounts);
+          async.eachLimit(accountsToUnlock, config.accountUnlockThreadLimit, 
+          function(account, callback) {
+            web3.personal.unlockAccount(account, "", 100000, function(err, res) {
+              object.Unlocked[object.Existing.indexOf(account)] = account;
+              numUnlockedAccounts++;
+              result.log.AppendStatusUpdate({
+                msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
+              });
+              callback(err);
+            });     
+          }, function(err) {
+            if (err) {
+              result.log.AppendError({
+                msg: 'ERROR in accounts.unlock: ' + err
+              });
+              cb(err, null);
+            } else {
+              cb(null, result);
+            }
           });
-          callback(err);
-        });     
-      }, function(err) {
-        if (err) {
-          result.log.AppendError({
-            msg: 'ERROR in accounts.unlock: ' + err
-          });
-          cb(err, null);
         } else {
           cb(null, result);
         }
       });
     } else {
-      cb(null, result);
+      if ((numUnlockedAccounts < numRequiredAccounts)
+        && (config.doAccountUnlocking === true)) {
+        async.eachLimit(requiredAccounts, config.accountUnlockThreadLimit, 
+        function(account, callback) {
+          web3.personal.unlockAccount(account, "", 100000, function(err, res) {
+            object.Unlocked[object.Existing.indexOf(account)] = account;
+            numUnlockedAccounts++;
+            result.log.AppendStatusUpdate({
+              msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
+            });
+            callback(err);
+          });     
+        }, function(err) {
+          if (err) {
+            result.log.AppendError({
+              msg: 'ERROR in accounts.unlock: ' + err
+            });
+            cb(err, null);
+          } else {
+            cb(null, result);
+          }
+        });
+      } else {
+        cb(null, result);
+      }
     }
+  }
+
+  /*This function assumes that the required accounts are already unlocked on the node,
+    but just not yet added to the local list of unlocked accounts*/
+  function updateInitiallyUnlockedToUnlocked(result, cb) {
+    let numExistingAccounts = object.Existing.length;
+    let numUnlockedAccounts = object.Unlocked.length;
+    let accountOptions = result.accountOptions;
+    let numRequiredAccounts = accountOptions.numRequiredAccounts;
+    let requiredAccounts = object.Existing.slice(0, numRequiredAccounts);
+    let numInitiallyUnlockedAccounts = config.numInitiallyUnlockedAccounts;
+    let initiallyUnlockedAccounts = requiredAccounts;
+    if (numInitiallyUnlockedAccounts < numRequiredAccounts) {
+      initiallyUnlockedAccounts = object.Existing.slice(0, numInitiallyUnlockedAccounts);
+    }    
+    result.log.AppendStatusUpdate({
+      msg: 'Updating account unlocked state: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
+    });
+    async.eachLimit(initiallyUnlockedAccounts, config.accountUnlockThreadLimit,
+    function(account, callback) {
+      object.Unlocked[object.Existing.indexOf(account)] = account;
+      numUnlockedAccounts++;
+      result.log.AppendStatusUpdate({
+        msg: 'Updating account unlocked state: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
+      });
+      callback(null);
+    }, function(err) {
+      if (err) {
+        result.log.AppendError({
+          msg: 'ERROR in accounts.updateInitiallyUnlockedToUnlocked: ' + err
+        });
+        cb(err, null);
+      } else {
+        //console.log();
+        cb(null, result);
+      }
+    });
   }
 
   /*This function assumes that the required accounts are already unlocked on the node,

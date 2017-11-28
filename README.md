@@ -1,18 +1,38 @@
 # Quorum Network Tester
 The aim of this project is to make it easier to create a collection of benchmarking tests, set them up and run them on a Quorum/Ethereum network. 
 
-## Introduction
-When trying to measure the performance of a system, it is critical to carefully consider the following: 1) what needs to be measured, 2) what the inputs to the system should be for these measurements, and 3) how external and/or other factors not under our control may influence the performance (including the measurements/inputs) of the system. These considerations are important since they inform us about the meaning of our test results. If done properly, our tests will allow us to generate reproducible results and compare systems with each other. 
+## What does it do?
+The QuorumNetworkTester does the following:
+1) Connects to the rpc interfaces of a list of nodes, specified in config.js, using web3.js. 
+2) Runs the tests specified in config.js on the nodes specified in config.js.
+3) Records timestamped transaction hashes and errors for each node.
 
-This project is a work in progress, and therefore currently focusses mainly on how to generate the inputs, i.e. the transactions that can be used for the benchmarking of a Quorum/Ethereum network. The intention is to expand the capabilities to also include better measurements in the near future.
+If a QuorumNetworkProbe (https://github.com/rynobey/QuorumNetworkProbe) is running on a node's host, the QuorumNetworkTester can collect additional information (for every node running a QuorumNetworkProbe), which currently includes:
+1) CPU stats: iowait, utilization, loadAvg(1m), loadAvg(5m), loadAvg(15m).
+2) Disk stats: await, svctm, kBpsRead, kBpsWrite
+3) Memory stats: total memory (kB), available memory(kB)
+4) Blockchain stats: blockchain data size (kB)
 
-## Installation
+## How to I install it?
 ```
 git clone --recursive https://github.com/rynobey/QuorumNetworkTester.git
 cd QuorumNetworkTester
 npm install
 ```
-## Running a test
-1) Edit `config.js` by configuring `web3RPCHost` and `web3RPCPort` to point to your node(s).
-2) Run `node index.js`
-This will run an example test as specified in `config.js`. Take a look inside the `tests` folder for more tests. 
+See https://github.com/rynobey/QuorumNetworkProbe for setting up the probe on a node's host.
+
+## How do I set it up before running a test?
+The configuration of QuorumNetworkTester is done by setting parameter values in config.js. These parameters include a list of nodes to monitor and use for traffic generation and a list of tests to perform, as well as some other parameters. Each test procedure is defined in a file containing the preparation and execution procedures for that specific test, and the file itself is located in the tests folder. A quick guide to setting up and running a test using testrpc follows.
+
+1) If you have not done so yet, follow the instructions above to download and install QuorumNetworkTester
+2) If you don't yet have testrpc installed: ``npm install -g ethereumjs-testrpc@v4.1.3``
+3) Start testrpc: ``testrpc``
+4) Open config.js in your favourite text editor, and make sure that:
+  a) Your testrpc is listed in the ``config.nodes`` array. You will need to specify a name, host address, host port, and whether it will be used to generate traffic or not.
+  b) One of the example tests in the ``QuorumNetworkTests/tests/`` folder is listed in the ``config.tests`` array (it needs to be added using ``require('./tests/<testName>.js')``.
+  c) The number of initially unlocked accounts (``config.numInitiallyUnlockedAccounts``) is correct. This depends on how you start up testrpc - by default this will be 10.
+  d) Whether the accounts needed for a test should be created (``conig.doAccountCreation``), unlocked (``config.doAccountUnlocking``) and funded (``config.doEtherRedistribution``) is correctly specified. Typically these should all be ``false`` when using testrpc, and ``true`` when using something else (for ex. Quorum).
+  e) The time between fetching data from a deployed QuorumNetworkProbe (``config.probeDataFetchPeriod``) is specified. If there are no probes, or you do not want to record the data made available by the probe, you can set this to 0, which will disable it.
+5) Run the test: ``node index.js``, which should go through three phases: initialization, preparation, and execution.
+6) Status updates, errors, transactions hashes, and recorded host data (if activated) for each node can be found in the ``QuorumNetworkTester/logs`` directory, in the directory with the name corresponding to the year, month, day, hour, and minute (UTC) when the test was started.
+

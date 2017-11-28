@@ -3,35 +3,36 @@ var config = {}
 
 /*  Connection settings
 */
-//config.nodes = [
-//  {
-//    name: "testrpc1",
-//    web3RPCHost: "localhost",
-//    web3RPCPort: "8545"
-//  }
-//];
 config.nodes = [
   {
-    name: "node1",
-    web3RPCHost: "10.0.0.12",
-    web3RPCPort: "20010",
-    genTraffic: true
-  }, {
-    name: "node2",
-    web3RPCHost: "10.0.0.9",
-    web3RPCPort: "20010",
-    genTraffic: true
-  }, {
-    name: "node3",
-    web3RPCHost: "10.0.0.11",
-    web3RPCPort: "20010",
+    name: "testrpc1",
+    web3RPCHost: "localhost",
+    web3RPCPort: "8545",
     genTraffic: true
   }
 ];
+//config.nodes = [
+//  {
+//    name: "node1",
+//    web3RPCHost: "10.0.0.12",
+//    web3RPCPort: "20010",
+//    genTraffic: true
+//  }, {
+//    name: "node2",
+//    web3RPCHost: "10.0.0.9",
+//    web3RPCPort: "20010",
+//    genTraffic: true
+//  }, {
+//    name: "node3",
+//    web3RPCHost: "10.0.0.11",
+//    web3RPCPort: "20010",
+//    genTraffic: true
+//  }
+//];
 
 config.tests = [
-  require('./tests/tokenContractAsynchronuousExample1.js')
-  //require('./tests/etherTransactionExample1.js')
+  require('./tests/etherTransactionExample1.js')
+  //require('./tests/tokenContractAsynchronuousExample1.js')
 ];
 
 /*  Path to the root log directory
@@ -48,16 +49,16 @@ config.logPathRoot = path.resolve(__dirname, 'logs');
     a node setting, so numInitiallyUnlockedAccounts
     should correspond with how the node is set up)
 */
-config.numInitiallyUnlockedAccounts = 0;  
+config.numInitiallyUnlockedAccounts = 10;  
 
 /*  These can be changed if the necessary accounts 
     have already been created/unlocked
     These will typically be false when using testrpc
     and true when using quorum
 */
-config.doAccountCreation = true;
-config.doAccountUnlocking = true;
-config.doEtherRedistribution = true;
+config.doAccountCreation = false;
+config.doAccountUnlocking = false;
+config.doEtherRedistribution = false;
 
 /*  Miscellaneous settings
 */
@@ -68,7 +69,7 @@ config.syncUnpause = true;
 
 /*  Remote Probe settings
 */
-config.probeDataFetchPeriod = 5*1000; // a value of 0 disables fetching of robe data
+config.probeDataFetchPeriod = 0; // a value of 0 disables fetching of robe data
 
 
 module.exports = config

@@ -10,6 +10,7 @@ function web3RPC(result, cb) {
   result.web3 = new Web3RPC(new httpProvider("http://" + host + ":" + port));
   result.web3.eth.getBlockNumber(function(err, res) {
     //console.log("[INFO] Web3 RPC initialized: Connected to " + host + ":" + port);
+    if (err) {console.log("ERROR initializing Web3 connection:", err);}
     cb(null, result);
   });
 }
@@ -19,6 +20,7 @@ function web3RPCTimeout(result, cb) {
   wrappedWeb3RPC(result, function (err, res) {
     if (err) { 
       //console.log("[ERROR] Failed to initialize Web3 RPC: timeout");
+      if (err) {console.log("ERROR initializing Web3 connection:", err);}
       cb(err, null);
     } else { 
       cb(null, result);

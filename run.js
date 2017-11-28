@@ -49,9 +49,9 @@ function initialize(nodeIndex, cb) {
   let result = results[nodeIndex];
   let seq = [
     function(callback) { callback(null, result) },
+    result.log.Initialize,
     init.Web3RPCTimeout,
     init.ExtendWeb3,
-    result.log.Initialize,
     result.accounts.Sync
   ];
   doSequence(seq, cb);
