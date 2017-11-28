@@ -172,7 +172,7 @@ function log() {
     }
     let filePath = object.path + '/hostDiskStats.log';
     let str = timestamp + ',' + logObj.iowait + ',' + logObj.await + ',' +
-      logObj.svctm + ',' + logObj.kBpsRead + ',' + logObj.kBpsWrite + '\n';
+      logObj.svctm + ',' + logObj.kBpsRead + ',' + logObj.kBpsWrite + ',' + logObj.chaindataSizekB + '\n';
     fs.open(filePath, 'ax', function(err, fd) {
       if (err && err.code == 'EEXIST') {
         fs.open(filePath, 'a', function(err, fd) {
@@ -186,7 +186,7 @@ function log() {
         });
       } else { // file does not exist yet, write header line first
         fs.open(filePath, 'a', function(err, fd) {
-          let headerStr = 'timestamp,iowait,await,svctm,kBpsRead,kBpsWrite\n';
+          let headerStr = 'timestamp,iowait,await,svctm,kBpsRead,kBpsWrite,chaindataSizekB\n';
           let totalStr = headerStr + str;
           fs.write(fd, totalStr, function(err, wrtn, str) {
             if (err) {
