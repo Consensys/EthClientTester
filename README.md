@@ -3,15 +3,15 @@ The aim of this project is to make it easier to create a collection of benchmark
 
 ## What does it do?
 The QuorumNetworkTester does the following:
-1) Connects to the rpc interfaces of a list of nodes, specified in config.js, using web3.js. 
-2) Runs the tests specified in config.js on the nodes specified in config.js.
-3) Records timestamped transaction hashes and errors for each node.
+ - Connects to the rpc interfaces of a list of nodes, specified in config.js, using web3.js. 
+ - Runs the tests specified in config.js on the nodes specified in config.js.
+ - Records timestamped transaction hashes and errors for each node.
 
 If a QuorumNetworkProbe (https://github.com/rynobey/QuorumNetworkProbe) is running on a node's host, the QuorumNetworkTester can collect additional information (for every node running a QuorumNetworkProbe), which currently includes:
-1) CPU stats: iowait, utilization, loadAvg(1m), loadAvg(5m), loadAvg(15m).
-2) Disk stats: await, svctm, kBpsRead, kBpsWrite
-3) Memory stats: total memory (kB), available memory(kB)
-4) Blockchain stats: blockchain data size (kB)
+ - CPU stats: iowait, utilization, loadAvg(1m), loadAvg(5m), loadAvg(15m).
+ - Disk stats: await, svctm, kBpsRead, kBpsWrite
+ - Memory stats: total memory (kB), available memory(kB)
+ - Blockchain stats: blockchain data size (kB)
 
 ## How do I install it?
 ```
@@ -27,11 +27,16 @@ The configuration of QuorumNetworkTester is done by setting parameter values in 
 1) If you have not done so yet, follow the instructions above to download and install QuorumNetworkTester
 2) If you don't yet have testrpc installed: ``npm install -g ethereumjs-testrpc@v4.1.3``
 3) Start testrpc: ``testrpc``
-4) Open config.js in your favourite text editor, and make sure of the following:  
+4) Open config.js in your favourite text editor, and make sure of the following:   
+
    a) Your testrpc is listed in the ``config.nodes`` array. You will need to specify a name, host address, host port, and whether it will be used to generate traffic or not.  
-   b) One of the example tests in the ``QuorumNetworkTests/tests/`` folder is listed in the ``config.tests`` array (it needs to be added using ``require('./tests/<testName>.js')``. To get started, you can add the ether transfer example test by adding ``require('./tests/etherTransactionExample1.js')`` to the ``config.tests`` array.
-   c) The number of initially unlocked accounts (``config.numInitiallyUnlockedAccounts``) is correct. This depends on how you start up testrpc - by default this will be 10. 
-   d) Whether the accounts needed for a test should be created (``conig.doAccountCreation``), unlocked (``config.doAccountUnlocking``) and funded (``config.doEtherRedistribution``) is correctly specified. Typically these should all be ``false`` when using testrpc, and ``true`` when using something else (for ex. Quorum).
+   
+   b) One of the example tests in the ``QuorumNetworkTests/tests/`` folder is listed in the ``config.tests`` array (it needs to be added using ``require('./tests/<testName>.js')``. To get started, you can add the ether transfer example test by adding ``require('./tests/etherTransactionExample1.js')`` to the ``config.tests`` array.  
+   
+   c) The number of initially unlocked accounts (``config.numInitiallyUnlockedAccounts``) is correct. This depends on how you start up testrpc - by default this will be 10.   
+   
+   d) Whether the accounts needed for a test should be created (``conig.doAccountCreation``), unlocked (``config.doAccountUnlocking``) and funded (``config.doEtherRedistribution``) is correctly specified. Typically these should all be ``false`` when using testrpc, and ``true`` when using something else (for ex. Quorum).   
+   
    e) The time between fetching data from a deployed QuorumNetworkProbe (``config.probeDataFetchPeriod``) is specified. If there are no probes, or you do not want to record the data made available by the probe, you can set this to 0, which will disable it.  
    
 ## How do I run a test?
