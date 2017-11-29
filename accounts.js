@@ -77,8 +77,6 @@ function accounts() {
     if (numInitiallyUnlockedAccounts > 0) {
       updateInitiallyUnlockedToUnlocked(result, function(err, result) {
         numUnlockedAccounts = object.Unlocked.length;
-        console.log("numUnlockedAccounts", numUnlockedAccounts);
-        console.log("numRequiredAccounts", numRequiredAccounts);
         if (numUnlockedAccounts < numRequiredAccounts) {
           let accountsToUnlock = object.Existing.slice(numInitiallyUnlockedAccounts-1, numRequiredAccounts);
           async.eachLimit(accountsToUnlock, config.accountUnlockThreadLimit, 

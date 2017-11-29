@@ -46,8 +46,8 @@ module.exports.execute = function(seq) {
       cb(null, result);
     });
   });
-  seq.push(function(result, cb) {
-    result.transactions.Confirm(result, cb) ;
-  });
+  //seq.push(function(result, cb) {
+  //  result.transactions.Confirm(result, cb) ;
+  //});
   return seq;
 }
