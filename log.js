@@ -1,3 +1,5 @@
+var config = require('./config.js');
+
 function log() {
   let fs = require('fs');
   let path = require('path');
@@ -20,6 +22,7 @@ function log() {
       fs.mkdirSync(logPathInstance);
     } 
     object.path = logPathInstance;
+    object.numErrors = 0;
     result.log = object;
     cb(null, result);
   }
@@ -70,18 +73,21 @@ function log() {
   }
 
   function appendError(logObj) {
-    let timestamp;
-    if (logObj.timestamp) {
-      timestamp = logObj.timestamp;
-    } else {
-      timestamp = Date.now();
+    if (object.numErrors < config.maxNumErrors) {
+      let timestamp;
+      if (logObj.timestamp) {
+        timestamp = logObj.timestamp;
+      } else {
+        timestamp = Date.now();
+      }
+      let msg = logObj.msg;
+      let filePath = object.path + '/errors.log';
+      let str = timestamp + ',' + msg + '\n';
+      fs.appendFile(filePath, str, function(err) {
+        if (err) {console.log(err);}
+      });
+      object.numErrors++;
     }
-    let msg = logObj.msg;
-    let filePath = object.path + '/errors.log';
-    let str = timestamp + ',' + msg + '\n';
-    fs.appendFile(filePath, str, function(err) {
-      if (err) {console.log(err);}
-    });
   }
 
   function appendCPUStats(logObj) {

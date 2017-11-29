@@ -71,5 +71,9 @@ config.syncUnpause = true;
 */
 config.probeDataFetchPeriod = 0; // a value of 0 disables fetching of robe data
 
+/*  Specify a max number of errors to be logged (checked individually per node). 
+    Prevents error log file being spammed when something breaks.
+*/
+config.maxNumErrors = 100;
 
 module.exports = config
