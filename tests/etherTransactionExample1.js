@@ -1,5 +1,7 @@
 var scheduler = require('../scheduler.js');
 
+// total transaction rate = numAccounts * frequency [tx/s]
+// test run time = numIterations / frequency [s]
 let numAccounts = 2;
 let txValue = 10;
 let frequency = 10;
