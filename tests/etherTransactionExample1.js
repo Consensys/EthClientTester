@@ -10,10 +10,10 @@ module.exports.prepare = function(seq) {
     result.accountOptions = {
       numRequiredAccounts: numAccounts
     }
-    result.accounts.Create(result, cb);
+    result.accounts.CreateRequired(result, cb);
   });
   seq.push(function(result, cb) {
-    result.accounts.Unlock(result, cb);
+    result.accounts.UnlockRequired(result, cb);
   });
   seq.push(function(result, cb) {
     result.accounts.GetBalances(result, cb);
