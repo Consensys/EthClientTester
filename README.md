@@ -15,7 +15,7 @@ WIP: If a QuorumNetworkProbe (https://github.com/rynobey/QuorumNetworkProbe) is 
 
 ## How do I install it?
 ```
-git clone --recursive https://github.com/rynobey/QuorumNetworkTester.git
+git clone --recursive https://github.com/ConsenSys/QuorumNetworkTester.git
 cd QuorumNetworkTester
 npm install
 ```
