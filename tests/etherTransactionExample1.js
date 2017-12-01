@@ -1,19 +1,21 @@
 var scheduler = require('../scheduler.js');
 
-let numAccounts = 2;
-let txValue = 10;
-let frequency = 10;
-let numIterations = 100;
+// total transaction rate = numAccounts * frequency [tx/s]
+// test run time = numIterations / frequency [s]
+let numAccounts = 10;
+let txValue = 1;
+let frequency = 100;
+let numIterations = 5000;
 
 module.exports.prepare = function(seq) {
   seq.push(function(result, cb) {
     result.accountOptions = {
       numRequiredAccounts: numAccounts
     }
-    result.accounts.Create(result, cb);
+    result.accounts.CreateRequired(result, cb);
   });
   seq.push(function(result, cb) {
-    result.accounts.Unlock(result, cb);
+    result.accounts.UnlockRequired(result, cb);
   });
   seq.push(function(result, cb) {
     result.accounts.GetBalances(result, cb);
@@ -46,8 +48,10 @@ module.exports.execute = function(seq) {
       cb(null, result);
     });
   });
-  //seq.push(function(result, cb) {
-  //  result.transactions.Confirm(result, cb) ;
-  //});
+  seq.push(function(result, cb) {
+    result.blockchain.getBlocks(result, function(){
+      cb(null, result)
+    })
+  });
   return seq;
 }

@@ -16,25 +16,10 @@ function repeat(func, numIterations, frequency, callback) {
     },
     completed: function() {
       completedCount++;
-    },
-    displayProgress: function(description1, description2) {
-      description1 = description1 || "Repeating";
-      description2 = description2 || "";
-      //clear the line first
-      stdout.write(`\r                                                                `);
-      stdout.write(`\r[INFO] ` + description1 + `: ` + initiatedCount + ` / ` + 
-        numIterations + `` + description2);
     }
   }
   repeaters.push(repeater);
 
-  function allRepeatersUnpaused() {
-    let output = true;
-    for (let index = 0; index < repeaters.length; index++) {
-      if (repeaters[index].paused == true) { output = false; }
-    }
-    return output;
-  } 
   /*  There are two distinctly different conditions under which the repeater
       can be signalled to stop:
         1)  Once the required number of task repetitions (numIterations) have
@@ -54,10 +39,11 @@ function repeat(func, numIterations, frequency, callback) {
       and checking that completedCount >= numIterations before calling
       the next callback handles both cases appropriately.
   */
+  
   initiatedCount++;
   func(repeater);
   let intervalID = setInterval(function() {
-    if ((!syncUnpause && !paused) || (syncUnpause && allRepeatersUnpaused())) {
+    if ((!paused)) {
       if (completedCount >= numIterations) {
         clearInterval(intervalID);
         if (callback) {
@@ -67,10 +53,7 @@ function repeat(func, numIterations, frequency, callback) {
         if (initiatedCount < numIterations) {
           initiatedCount++;
           func(repeater);
-          //if (initiatedCount == numIterations) { console.log(); }
         } else { // this means that we are waiting for pending tasks to complete...
-          //stdout.write(`\r[INFO] Waiting for pending tasks to complete: ` +
-          //  completedCount + ` / ` + initiatedCount);
         }
       }
     }

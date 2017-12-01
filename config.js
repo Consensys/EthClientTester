@@ -3,14 +3,14 @@ var config = {}
 
 /*  Connection settings
 */
-config.nodes = [
-  {
-    name: "testrpc1",
-    web3RPCHost: "localhost",
-    web3RPCPort: "8545",
-    genTraffic: true
-  }
-];
+//config.nodes = [
+//  {
+//    name: "testrpc1",
+//    web3RPCHost: "localhost",
+//    web3RPCPort: "8545",
+//    genTraffic: true
+//  }
+//];
 //config.nodes = [
 //  {
 //    name: "node1",
@@ -29,6 +29,14 @@ config.nodes = [
 //    genTraffic: true
 //  }
 //];
+config.nodes = [
+  {
+    name: "raft1",
+    web3RPCHost: "127.0.0.1",
+    web3RPCPort: "20010",
+    genTraffic: true
+  }
+];
 
 config.tests = [
   require('./tests/etherTransactionExample1.js')
@@ -49,16 +57,16 @@ config.logPathRoot = path.resolve(__dirname, 'logs');
     a node setting, so numInitiallyUnlockedAccounts
     should correspond with how the node is set up)
 */
-config.numInitiallyUnlockedAccounts = 10;  
+config.numInitiallyUnlockedAccounts = 0;  
 
 /*  These can be changed if the necessary accounts 
     have already been created/unlocked
     These will typically be false when using testrpc
     and true when using quorum
 */
-config.doAccountCreation = false;
-config.doAccountUnlocking = false;
-config.doEtherRedistribution = false;
+config.doAccountCreation = true;
+config.doAccountUnlocking = true;
+config.doEtherRedistribution = true;
 
 /*  Miscellaneous settings
 */
@@ -71,5 +79,9 @@ config.syncUnpause = true;
 */
 config.probeDataFetchPeriod = 0; // a value of 0 disables fetching of robe data
 
+/*  Specify a max number of errors to be logged (checked individually per node). 
+    Prevents error log file being spammed when something breaks.
+*/
+config.maxNumErrors = 100;
 
 module.exports = config

@@ -24,7 +24,7 @@ function accounts() {
     });
   }
 
-  function create(result, cb) {
+  function createRequired(result, cb) {
     let stdout = process.stdout;
     let web3 = result.web3;
     let numExistingAccounts = object.Existing.length;
@@ -42,7 +42,8 @@ function accounts() {
           result.log.AppendStatusUpdate({
             msg: 'Creating accounts: ' + numCurrentAccounts + ' / ' + numRequiredAccounts
           });
-          callback(err, res);
+          if (err) { callback(err); }
+          else { callback(); }
         });
       }, function(err) {
         if (err) {
@@ -63,7 +64,7 @@ function accounts() {
     }
   }
 
-  function unlock(result, cb) {
+  function unlockRequired(result, cb) {
     let stdout = process.stdout;
     let web3 = result.web3;
     let numExistingAccounts = object.Existing.length;
@@ -87,12 +88,13 @@ function accounts() {
               result.log.AppendStatusUpdate({
                 msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
               });
-              callback(err);
+              if (err) { callback(err); }
+              else { callback(); }
             });     
           }, function(err) {
             if (err) {
               result.log.AppendError({
-                msg: 'ERROR in accounts.unlock: ' + err
+                msg: 'ERROR in accounts.unlockRequired: ' + err
               });
               cb(err, null);
             } else {
@@ -114,12 +116,13 @@ function accounts() {
             result.log.AppendStatusUpdate({
               msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
             });
-            callback(err);
+            if (err) { callback(err); }
+            else { callback(); }
           });     
         }, function(err) {
           if (err) {
             result.log.AppendError({
-              msg: 'ERROR in accounts.unlock: ' + err
+              msg: 'ERROR in accounts.unlockRequired: ' + err
             });
             cb(err, null);
           } else {
@@ -145,9 +148,6 @@ function accounts() {
     if (numInitiallyUnlockedAccounts < numRequiredAccounts) {
       initiallyUnlockedAccounts = object.Existing.slice(0, numInitiallyUnlockedAccounts);
     }    
-    result.log.AppendStatusUpdate({
-      msg: 'Updating account unlocked state: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
-    });
     async.eachLimit(initiallyUnlockedAccounts, config.accountUnlockThreadLimit,
     function(account, callback) {
       object.Unlocked[object.Existing.indexOf(account)] = account;
@@ -155,7 +155,8 @@ function accounts() {
       result.log.AppendStatusUpdate({
         msg: 'Updating account unlocked state: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
       });
-      callback(null);
+      if (err) { callback(err); }
+      else { callback(); }
     }, function(err) {
       if (err) {
         result.log.AppendError({
@@ -180,9 +181,6 @@ function accounts() {
     let requiredAccounts = object.Existing.slice(0, numRequiredAccounts);
     let numUnlockedAccounts = object.Unlocked.length;
       
-    result.log.AppendStatusUpdate({
-      msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
-    });
     async.eachLimit(requiredAccounts, config.accountUnlockThreadLimit,
     function(account, callback) {
       object.Unlocked[object.Existing.indexOf(account)] = account;
@@ -190,7 +188,8 @@ function accounts() {
       result.log.AppendStatusUpdate({
         msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
       });
-      callback(null);
+      if (err) { callback(err); }
+      else { callback(); }
     }, function(err) {
       if (err) {
         result.log.AppendError({
@@ -225,7 +224,8 @@ function accounts() {
       result.log.AppendStatusUpdate({
         msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
       });
-      callback(null);
+      if (err) { callback(err); }
+      else { callback(); }
     }, function(err) {
       if (err) {
         result.log.AppendError({
@@ -257,7 +257,8 @@ function accounts() {
           result.log.AppendStatusUpdate({
             msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
           });
-          callback(err, res);
+          if (err) { callback(err); }
+          else { callback(); }
         });     
       }, function(err) {
         if (err) {
@@ -302,7 +303,8 @@ function accounts() {
         if (responseCount == requestCount) {
           cb(null, result);
         }
-        callback(err, res);
+        if (err) { callback(err); }
+        else { callback(); }
       });
     }, function (err) {
     });
@@ -332,7 +334,8 @@ function accounts() {
         if (responseCount == requestCount) {
           cb(null, result);
         }
-        callback(err, res);
+        if (err) { callback(err); }
+        else { callback(); }
       });
     }, function (err) {
     });
@@ -469,8 +472,8 @@ function accounts() {
   }
 
   object.Sync = sync;
-  object.Create = create;
-  object.Unlock = unlock;
+  object.CreateRequired = createRequired;
+  object.UnlockRequired = unlockRequired;
   object.UpdateRequiredToUnlocked = updateRequiredToUnlocked;
   object.UpdateAllExistingToUnlocked = updateAllExistingToUnlocked;
   object.UnlockAll = unlockAll;

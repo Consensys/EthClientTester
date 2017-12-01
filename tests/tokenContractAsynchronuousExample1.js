@@ -9,10 +9,10 @@ module.exports.prepare = function(seq) {
     result.accountOptions = {
       numRequiredAccounts: 2
     }
-    result.accounts.Create(result, cb);
+    result.accounts.CreateRequried(result, cb);
   });
   seq.push(function(result, cb) {
-    result.accounts.Unlock(result, cb);
+    result.accounts.UnlockRequired(result, cb);
   });
   seq.push(function(result, cb) {
     let contract1DeploymentAccountIndex = 0;
