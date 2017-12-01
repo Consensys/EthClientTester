@@ -111,36 +111,7 @@ function contracts() {
       });  
     }
 
-    //create accounts
-    if ((config.doAccountCreation === undefined) || (config.doAccountCreation != false)) {
-      stopInterval = true;
-      tasks.push(accounts.Create);
-    }
-    //unlock accounts
-    if ((config.doAccountUnlocking === undefined) || (config.doAccountUnlocking != false)) {
-      if (accounts.Unlocked.length < numRequiredAccounts) {
-        stopInterval = true;
-        tasks.push(accounts.Unlock);
-      }
-    } else { 
-      if ((!accounts.Unlocked) || accounts.Unlocked.length < numRequiredAccounts) {
-        stopInterval = true;
-        /*if not unlocking accounts, it is assumed that all 
-          the needed accounts are already unlocked*/
-        tasks.push(accounts.UpdateRequiredToUnlocked);
-      }
-    }
-
-    //pause (wait) until initialization is completed before resuming
-    if (result.repeater && stopInterval) { result.repeater.pause(); }
-    async.waterfall(tasks, function(err, res) {
-      if (!err) {
-        deployAllContracts();
-        if (result.repeater) { result.repeater.resume(); }
-      } else {
-        cb(err, null);
-      }
-    });
+    deployAllContracts();
   }
 
   function gatherInfo(contractInfo, contractOwnerIndex) {
