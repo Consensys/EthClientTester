@@ -4,8 +4,8 @@ var scheduler = require('../scheduler.js');
 // test run time = numIterations / frequency [s]
 let numAccounts = 10;
 let txValue = 1;
-let frequency = 100;
-let numIterations = 5000;
+let frequency = 10;
+let numIterations = 10;
 
 module.exports.prepare = function(seq) {
   seq.push(function(result, cb) {
@@ -48,10 +48,4 @@ module.exports.execute = function(seq) {
       cb(null, result);
     });
   });
-  seq.push(function(result, cb) {
-    result.blockchain.getBlocks(result, function(){
-      cb(null, result)
-    })
-  });
-  return seq;
 }

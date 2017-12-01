@@ -3,14 +3,14 @@ var config = {}
 
 /*  Connection settings
 */
-//config.nodes = [
-//  {
-//    name: "testrpc1",
-//    web3RPCHost: "localhost",
-//    web3RPCPort: "8545",
-//    genTraffic: true
-//  }
-//];
+config.nodes = [
+  {
+    name: "testrpc1",
+    web3RPCHost: "localhost",
+    web3RPCPort: "8545",
+    genTraffic: true
+  }
+];
 //config.nodes = [
 //  {
 //    name: "node1",
@@ -29,14 +29,14 @@ var config = {}
 //    genTraffic: true
 //  }
 //];
-config.nodes = [
-  {
-    name: "raft1",
-    web3RPCHost: "127.0.0.1",
-    web3RPCPort: "20010",
-    genTraffic: true
-  }
-];
+//config.nodes = [
+//  {
+//    name: "raft1",
+//    web3RPCHost: "127.0.0.1",
+//    web3RPCPort: "20010",
+//    genTraffic: true
+//  }
+//];
 
 config.tests = [
   require('./tests/etherTransactionExample1.js')
@@ -57,16 +57,16 @@ config.logPathRoot = path.resolve(__dirname, 'logs');
     a node setting, so numInitiallyUnlockedAccounts
     should correspond with how the node is set up)
 */
-config.numInitiallyUnlockedAccounts = 0;  
+config.numInitiallyUnlockedAccounts = 10;  
 
 /*  These can be changed if the necessary accounts 
     have already been created/unlocked
     These will typically be false when using testrpc
     and true when using quorum
 */
-config.doAccountCreation = true;
-config.doAccountUnlocking = true;
-config.doEtherRedistribution = true;
+config.doAccountCreation = false;
+config.doAccountUnlocking = false;
+config.doEtherRedistribution = false;
 
 /*  Miscellaneous settings
 */
