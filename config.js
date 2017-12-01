@@ -41,6 +41,7 @@ config.nodes = [
 config.tests = [
   require('./tests/etherTransactionExample1.js')
   //require('./tests/tokenContractAsynchronuousExample1.js')
+  //require('./tests/tokenTransferConstantRate1.js')
 ];
 
 /*  Path to the root log directory
@@ -82,6 +83,6 @@ config.probeDataFetchPeriod = 0; // a value of 0 disables fetching of robe data
 /*  Specify a max number of errors to be logged (checked individually per node). 
     Prevents error log file being spammed when something breaks.
 */
-config.maxNumErrors = 100;
+config.maxNumErrors = 10000;
 
 module.exports = config
