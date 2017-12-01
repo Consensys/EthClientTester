@@ -2,10 +2,10 @@ var scheduler = require('../scheduler.js');
 
 // total transaction rate = numAccounts * frequency [tx/s]
 // test run time = numIterations / frequency [s]
-let numAccounts = 10;
+let numAccounts = 20;
 let txValue = 1;
-let frequency = 100;
-let numIterations = 5000;
+let frequency = 1000;
+let numIterations = 1000;
 
 module.exports.prepare = function(seq) {
   seq.push(function(result, cb) {
@@ -29,6 +29,10 @@ module.exports.prepare = function(seq) {
 }
 
 module.exports.execute = function(seq) {
+  console.log('=== Running transactions ===')
+  console.log('Attempted transaction rate:', numAccounts*frequency, '[tx/s]')
+  console.log('Run time at attempted rate:', numIterations/frequency, '[s]')
+  console.log('=== Running transactions ===')
   seq.push(function(result, cb) {
     scheduler.Repeat(function(repeater) {
       let transactions = result.transactions;
@@ -45,10 +49,12 @@ module.exports.execute = function(seq) {
       }
       transactions.SendBatch(result); // no cb passed to indicate that called from within repeater
     }, numIterations, frequency, function() {
+      console.log('transactions.SendBatch cb called')
       cb(null, result);
     });
   });
   seq.push(function(result, cb) {
+    console.log('result.blockchain:', result.blockchain)
     result.blockchain.getBlocks(result, function(){
       cb(null, result)
     })
