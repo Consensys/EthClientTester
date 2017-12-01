@@ -32,6 +32,7 @@ for (let index = 0; index < config.nodes.length; index++) {
   results[index].accounts = new (require('./accounts.js'));
   results[index].contracts = new (require('./contracts.js'));
   results[index].transactions = new (require('./transactions.js'));
+  results[index].blockchain = new (require('./blockchain.js'));
   results[index].metrics = new (require('./metrics.js'));
 }
 
