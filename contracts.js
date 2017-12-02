@@ -56,42 +56,45 @@ function contracts() {
     
     function deployCompiledContract(compiledContract, callback) {
       let contract = web3.eth.contract(compiledContract.abi);
-      let deploymentTx = { 
+      let deploymentTx = {
         data: '0x' + compiledContract.bytecode,
         from: accounts.Unlocked[compiledContract.ownerIndex],
       };
       deploymentTx.gas = web3.eth.estimateGas(deploymentTx);
       web3.eth.sendTransaction(deploymentTx, function(err, res) {
-        if (!err) { 
+        if (!err) {
+          let receipt = null;
           // request the transaction receipt in order to obtain the contract address
-          let receipt = web3.eth.getTransactionReceipt(res);
-          if (!receipt) {
-            result.log.AppendError({
-              msg: 'ERROR in contracts.deployCompiledContract (no receipt): ' + err
-            });
-          } else {
-            let instance = contract.at(receipt.contractAddress);
-            for (let i = 0; i < instance.abi.length; i++) {
-              if (instance.abi[i].name) {
-                instance[instance.abi[i].name].getTx = function() {
-                  let txData = instance[instance.abi[i].name].getData.apply(this, arguments);
-                  let tx = {
-                    from: arguments[arguments.length-1].from,
-                    to: instance.address,
-                    data: txData,
+          while (receipt === null) {
+            receipt = web3.eth.getTransactionReceipt(res);
+            if (err || !receipt) {
+              result.log.AppendError({
+                msg: 'ERROR in contracts.deployCompiledContract (no receipt): ' + err
+              });
+            } else {
+              let instance = contract.at(receipt.contractAddress);
+              for (let i = 0; i < instance.abi.length; i++) {
+                if (instance.abi[i].name) {
+                  instance[instance.abi[i].name].getTx = function() {
+                    let txData = instance[instance.abi[i].name].getData.apply(this, arguments);
+                    let tx = {
+                      from: arguments[arguments.length-1].from,
+                      to: instance.address,
+                      data: txData,
+                    }
+                    if (arguments[arguments.length-1].gas) {
+                      tx.gas = arguments[arguments.length-1].gas;
+                    } else {
+                      tx.gas = web3.eth.estimateGas(tx);
+                    }
+                    return tx;
                   }
-                  if (arguments[arguments.length-1].gas) {
-                    tx.gas = arguments[arguments.length-1].gas;
-                  } else {
-                    tx.gas = web3.eth.estimateGas(tx);
-                  }
-                  return tx;
                 }
               }
+              object.Deployed.push(instance);
+              object.NumDeployed++;
+              callback(null);
             }
-            object.Deployed.push(instance);
-            object.NumDeployed++;
-            callback(null);
           }
         } else {
           result.log.AppendError({
