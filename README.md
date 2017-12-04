@@ -31,7 +31,7 @@ The configuration of QuorumNetworkTester is done by setting parameter values in 
 
    a) That your testrpc is listed in the ``config.nodes`` array. You will need to specify a name, host address, host port, and whether it will be used to generate traffic or not. Besides listing each node's details, you also need to specify the type of client running on your nodes: ``config.clientType = 'ethereumjs-testrpc`` if using testrpc (use ``'go-quorum'`` if client is quorum).
    
-   b) That one of the example tests in the ``QuorumNetworkTests/tests/`` folder is listed in the ``config.tests`` array (it needs to be added using ``'<testName>.js'``. To get started, you can add the ether transfer example test by adding ``'etherTransactionExample1.js'`` to the ``config.tests`` array.  
+   b) That one of the example tests in the ``QuorumNetworkTester/tests/`` folder is listed in the ``config.tests`` array (it needs to be added using ``'<testName>.js'``. To get started, you can add the ether transfer example test by adding ``'etherTransactionExample1.js'`` to the ``config.tests`` array.  
    
 ## How do I run a test?
 Once the QuorumNetworkTester is configured, and your network is up and running, you can start the test using ``node index.js``. Running a test involves three phases: initialization, preparation, and execution. Once a test is completed, it will exit. Timestamped status updates, errors, transaction hashes, and recorded host data (if activated) for each node can be found in the ``QuorumNetworkTester/logs`` directory, in the directory with the name corresponding to the year, month, day, hour, and minute (UTC) when the test was started.
