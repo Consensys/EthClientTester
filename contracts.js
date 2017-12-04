@@ -67,9 +67,13 @@ function contracts() {
           // request the transaction receipt in order to obtain the contract address
           while (receipt === null) {
             receipt = web3.eth.getTransactionReceipt(res);
-            if (err || !receipt) {
+            if (err) {
               result.log.AppendError({
                 msg: 'ERROR in contracts.deployCompiledContract (no receipt): ' + err
+              });
+            } else if(!receipt) {
+              result.log.AppendStatusUpdate({
+                msg: 'Waiting for contract deployment transaction receipt...'
               });
             } else {
               let instance = contract.at(receipt.contractAddress);
@@ -91,6 +95,9 @@ function contracts() {
                   }
                 }
               }
+              result.log.AppendStatusUpdate({
+                msg: 'Contract deployed at address ' + receipt.contractAddress
+              });
               object.Deployed.push(instance);
               object.NumDeployed++;
               callback(null);
@@ -113,7 +120,6 @@ function contracts() {
         cb(null, result);
       });  
     }
-
     deployAllContracts();
   }
 
