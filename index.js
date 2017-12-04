@@ -1,9 +1,9 @@
 var cluster = require('cluster');
 var config = require('./config.js');
+config = loadSettings();
 var run = require('./run.js');
-
-let numNodes = config.nodes.length;
-let numTests = config.tests.length;
+var numNodes = config.nodes.length;
+var numTests = config.tests.length;
 
 if (cluster.isMaster) {
   let numWorkers = numNodes;
@@ -120,6 +120,7 @@ if (cluster.isMaster) {
     workers.push(worker);
   }
 
+  displaySettings();
   initializeAllWorkers();
 
 } else {
@@ -163,4 +164,81 @@ if (cluster.isMaster) {
       config.nodes[nodeIndex].web3RPCHost + ":" + 
       config.nodes[nodeIndex].web3RPCPort + "]: exited");
   });
+}
+
+function loadSettings() {
+  let env = process.env;
+
+  /*  Path to the root log directory
+  */
+  let path = require('path');
+  config.logPathRoot = env.LOG_PATH_ROOT ? env.LOG_PATH_ROOT : path.resolve(__dirname, 'logs');
+
+  config.clientType = config.clientType ? config.clientType : 'ethereumjs-testrpc';
+  config.clientType = env.CLIENT_TYPE ? env.CLIENT_TYPE : config.clientType;
+
+  /*  When using testrpc, the number of accounts
+      will need to be specified when testrpc is
+      started (use the -a=... option), and these 
+      accounts will all be unlocked automatically.
+  */
+  /*  Number of accounts on test node that are always
+      automatically unlocked when node starts (this is
+      a node setting, so numInitiallyUnlockedAccounts
+      should correspond with how the node is set up)
+  */
+  let numInitiallyUnlockedAccounts = 0;  
+  if (config.clientType == 'ethereumjs-testrpc') {
+    numInitiallyUnlockedAccounts = 10; // this is the default for testrpc
+  }
+  config.numInitiallyUnlockedAccounts = env.NUM_INITIALLY_UNLOCKED_ACCOUNTS ? env.NUM_INITIALLY_UNLOCKED_ACCOUNTS : numInitiallyUnlockedAccounts;
+  /*  These can be changed if the necessary accounts 
+      have already been created/unlocked
+      These will typically be false when using testrpc
+      and true when using quorum
+  */
+  let doAccountCreation = true;
+  let doAccountUnlocking = true;
+  let doEtherRedistribution = true;
+  if (config.clientType == 'ethereumjs-testrpc') {
+    doAccountCreation = false;
+    doAccountUnlocking = false;
+    doEtherRedistribution = false;
+  }
+  config.doAccountCreation = env.DO_ACCOUNT_CREATION ? env.DO_ACCOUNT_CREATION : doAccountCreation;
+  config.doAccountUnlocking = env.DO_ACCOUNT_UNLOCKING ? env.DO_ACCOUNT_UNLOCKING : doAccountUnlocking;
+  config.doEtherRedistribution = env.DO_ETHER_REDISTRIBUTION ? env.DO_ETHER_REDISTRIBUTION : doEtherRedistribution;
+
+  /*  Miscellaneous settings
+  */
+  config.web3RPCInitTimeoutMillis = 10000; // exits with error if it takes longer than this
+  config.accountUnlockThreadLimit = 5;    // number of concurrent threads limited to this
+
+  /*  Remote Probe settings
+  */
+  config.probeDataFetchPeriod = env.PROBE_DATA_FETCH_PERIOD ? env.PROBE_DATA_FETCH_PERIOD : 0; // a value of 0 disables fetching of probe data
+
+  /*  Specify a max number of errors to be logged (checked individually per node). 
+      Prevents error log file being spammed when something breaks.
+  */
+  config.maxNumErrors = env.MAX_NUM_ERRORS ? env.MAX_NUM_ERRORS : 10000;
+
+  return config;
+}
+
+function displaySettings() {
+  console.log("Started with the following settings:");
+  console.log("CLIENT_TYPE =", config.clientType);
+  console.log("NUM_INITIALLY_UNLOCKED_ACCOUNTS =", config.numInitiallyUnlockedAccounts);
+  console.log("DO_ACCOUNT_CREATION =", config.doAccountCreation);
+  console.log("DO_ACCOUNT_UNLOCKING =", config.doAccountUnlocking);
+  console.log("DO_ETHER_REDISTRIBUTION =", config.doEtherRedistribution);
+  console.log("LOG_PATH_ROOT =", config.logPathRoot);
+  console.log("MAX_NUM_ERRORS =", config.maxNumErrors);
+  console.log("PROBE_DATA_FETCH_PERIOD =", config.probeDataFetchPeriod);
+  console.log();
+  console.log("Connecting to " + config.nodes.length + " node(s)");
+  console.log("Running tests: ", config.tests);
+  console.log("Data can be found in " + config.logPathRoot + "/" + run.Results[0].logOptions.logDirTest);
+  console.log();
 }

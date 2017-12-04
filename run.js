@@ -4,9 +4,9 @@ var config = require('./config.js');
 
 var results = [];
 var date = new Date();
-var dateString = date.getUTCFullYear() + '-' + 
-  (date.getUTCMonth() + 1) + '-' + date.getUTCDate() + '_' + 
-  date.getUTCHours() + '-' + date.getUTCMinutes();
+var dateString = date.getUTCFullYear() + '_' + 
+  (date.getUTCMonth() + 1) + '_' + date.getUTCDate() + '-' + 
+  date.getUTCHours() + '_' + date.getUTCMinutes();
 
 for (let index = 0; index < config.nodes.length; index++) {
   let name = config.nodes[index].name;
@@ -62,7 +62,8 @@ function prepare(nodeIndex, testIndex, cb) {
   if (config.nodes[nodeIndex].genTraffic === true) {
     let numTests = config.tests.length;
     let seq = [function(callback) { callback(null, result); }];
-    config.tests[testIndex].prepare(seq);
+    let test = requireTest(config.tests[testIndex])
+    test.prepare(seq);
     doSequence(seq, cb);
   } else {
     cb(null, result);
@@ -74,11 +75,16 @@ function execute(nodeIndex, testIndex, cb) {
   if (config.nodes[nodeIndex].genTraffic === true) {
     let numTests = config.tests.length;
     let seq = [function(callback) { callback(null, result); }];
-    config.tests[testIndex].execute(seq);
+    let test = requireTest(config.tests[testIndex])
+    test.execute(seq);
     doSequence(seq, cb);
   } else {
     cb(null, result);
   }
+}
+
+function requireTest(testName) {
+  return require('./tests/' + testName);
 }
 
 module.exports.Initialize = initialize;
