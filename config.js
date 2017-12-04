@@ -3,7 +3,6 @@ var config = {}
 /*  Connection settings
 */
 config.clientType = 'ethereumjs-testrpc';
-
 config.nodes = [
   {
     name: "testrpc1",
@@ -14,7 +13,6 @@ config.nodes = [
 ];
 
 //config.clientType = 'go-quorum';
-//
 //config.nodes = [
 //  {
 //    name: "node1",

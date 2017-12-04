@@ -10,6 +10,11 @@ if (cluster.isMaster) {
   let workers = [];
   let testIndex = 0;
   let intervalID = null;
+  let date = new Date();
+  let dateString = date.getUTCFullYear() + '_' + 
+    (date.getUTCMonth() + 1) + '_' + date.getUTCDate() + '-' + 
+    date.getUTCHours() + '_' + date.getUTCMinutes();
+  let numLogDirs = getNumDirsIn(config.logPathRoot);
 
   function isLastWorkerToBeInitialized(worker) {
     let isLastToBeInitialized = false;
@@ -59,9 +64,9 @@ if (cluster.isMaster) {
   function initializeAllWorkers() {
     console.log("Initializing...");
     for (let index = 0; index < numWorkers; index++) {
-      workers[index].send({command: 'initialize', params: [index]});
+      workers[index].send({command: 'initialize', params: [index, dateString, numLogDirs]});
       // Also initialize the master thread's instance of run.Results
-      run.Initialize(index, function(){});
+      run.Initialize(index, dateString, numLogDirs, function(err, res){});
     }
   }
 
@@ -119,8 +124,7 @@ if (cluster.isMaster) {
     });
     workers.push(worker);
   }
-
-  displaySettings();
+  displaySettings(numLogDirs, dateString);
   initializeAllWorkers();
 
 } else {
@@ -141,9 +145,13 @@ if (cluster.isMaster) {
     res = {};
     if (msg.command == 'initialize') {
       nodeIndex = msg.params[0];
+      dateString = msg.params[1];
+      numLogDirs = msg.params[2];
       res.nodeIndex = nodeIndex;
+      res.dateString = dateString;
+      res.numLogDirs = numLogDirs;
       res.msg = msg;
-      run.Initialize(nodeIndex, handleWorkCompleted);
+      run.Initialize(nodeIndex, dateString, numLogDirs, handleWorkCompleted);
     } else if (msg.command == 'prepare') {
       testIndex = msg.params[0];
       res.nodeIndex = nodeIndex;
@@ -226,8 +234,17 @@ function loadSettings() {
   return config;
 }
 
-function displaySettings() {
+function getNumDirsIn(dir) {
+  let { join } = require('path');
+  let { lstatSync, readdirSync } = require('fs');
+  let fs = require('fs');
+  let dirs = fs.readdirSync(dir);
+  return (dirs.length + 1);
+}
+
+function displaySettings(numLogDirs, dateString) {
   console.log("Started with the following settings:");
+  console.log();
   console.log("CLIENT_TYPE =", config.clientType);
   console.log("NUM_INITIALLY_UNLOCKED_ACCOUNTS =", config.numInitiallyUnlockedAccounts);
   console.log("DO_ACCOUNT_CREATION =", config.doAccountCreation);
@@ -239,6 +256,6 @@ function displaySettings() {
   console.log();
   console.log("Connecting to " + config.nodes.length + " node(s)");
   console.log("Running tests: ", config.tests);
-  console.log("Data can be found in " + config.logPathRoot + "/" + run.Results[0].logOptions.logDirTest);
+  console.log("Data can be found in " + config.logPathRoot + "/" + numLogDirs + "-" + dateString);
   console.log();
 }
