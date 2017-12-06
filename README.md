@@ -15,7 +15,7 @@ WIP: If a QuorumNetworkProbe (https://github.com/rynobey/QuorumNetworkProbe) is 
 
 ## How do I install it?
 ```
-git clone --recursive https://github.com/rynobey/QuorumNetworkTester.git
+git clone --recursive https://github.com/ConsenSys/QuorumNetworkTester.git
 cd QuorumNetworkTester
 npm install
 ```
@@ -29,15 +29,9 @@ The configuration of QuorumNetworkTester is done by setting parameter values in 
 3) Start testrpc: ``testrpc``
 4) Open config.js in your favourite text editor, and make sure of the following:   
 
-   a) That your testrpc is listed in the ``config.nodes`` array. You will need to specify a name, host address, host port, and whether it will be used to generate traffic or not.  
+   a) That your testrpc is listed in the ``config.nodes`` array. You will need to specify a name, host address, host port, and whether it will be used to generate traffic or not. Besides listing each node's details, you also need to specify the type of client running on your nodes: ``config.clientType = 'ethereumjs-testrpc`` if using testrpc (use ``'go-quorum'`` if client is quorum).
    
-   b) That one of the example tests in the ``QuorumNetworkTests/tests/`` folder is listed in the ``config.tests`` array (it needs to be added using ``require('./tests/<testName>.js')``. To get started, you can add the ether transfer example test by adding ``require('./tests/etherTransactionExample1.js')`` to the ``config.tests`` array.  
-   
-   c) That the number of initially unlocked accounts (``config.numInitiallyUnlockedAccounts``) is correct. This depends on how you start up testrpc - by default this will be 10.   
-   
-   d) That the accounts needed for a test should be created (``conig.doAccountCreation``), unlocked (``config.doAccountUnlocking``) and funded (``config.doEtherRedistribution``) is correctly specified. Typically these should all be ``false`` when using testrpc, and ``true`` when using something else (for ex. Quorum).   
-   
-   e) That the time between fetching data from a deployed QuorumNetworkProbe (``config.probeDataFetchPeriod``) is specified. If there are no probes, or you do not want to record the data made available by the probe, you can set this to 0, which will disable it. (This is WIP, set to 0 for now).  
+   b) That one of the example tests in the ``QuorumNetworkTester/tests/`` folder is listed in the ``config.tests`` array (it needs to be added using ``'<testName>.js'``. To get started, you can add the ether transfer example test by adding ``'etherTransactionExample1.js'`` to the ``config.tests`` array.  
    
 ## How do I run a test?
 Once the QuorumNetworkTester is configured, and your network is up and running, you can start the test using ``node index.js``. Running a test involves three phases: initialization, preparation, and execution. Once a test is completed, it will exit. Timestamped status updates, errors, transaction hashes, and recorded host data (if activated) for each node can be found in the ``QuorumNetworkTester/logs`` directory, in the directory with the name corresponding to the year, month, day, hour, and minute (UTC) when the test was started.

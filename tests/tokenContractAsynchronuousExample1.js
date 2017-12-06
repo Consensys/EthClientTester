@@ -9,7 +9,7 @@ module.exports.prepare = function(seq) {
     result.accountOptions = {
       numRequiredAccounts: 2
     }
-    result.accounts.CreateRequried(result, cb);
+    result.accounts.CreateRequired(result, cb);
   });
   seq.push(function(result, cb) {
     result.accounts.UnlockRequired(result, cb);

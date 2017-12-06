@@ -56,42 +56,52 @@ function contracts() {
     
     function deployCompiledContract(compiledContract, callback) {
       let contract = web3.eth.contract(compiledContract.abi);
-      let deploymentTx = { 
+      let deploymentTx = {
         data: '0x' + compiledContract.bytecode,
         from: accounts.Unlocked[compiledContract.ownerIndex],
       };
       deploymentTx.gas = web3.eth.estimateGas(deploymentTx);
       web3.eth.sendTransaction(deploymentTx, function(err, res) {
-        if (!err) { 
+        if (!err) {
+          let receipt = null;
           // request the transaction receipt in order to obtain the contract address
-          let receipt = web3.eth.getTransactionReceipt(res);
-          if (!receipt) {
-            result.log.AppendError({
-              msg: 'ERROR in contracts.deployCompiledContract (no receipt): ' + err
-            });
-          } else {
-            let instance = contract.at(receipt.contractAddress);
-            for (let i = 0; i < instance.abi.length; i++) {
-              if (instance.abi[i].name) {
-                instance[instance.abi[i].name].getTx = function() {
-                  let txData = instance[instance.abi[i].name].getData.apply(this, arguments);
-                  let tx = {
-                    from: arguments[arguments.length-1].from,
-                    to: instance.address,
-                    data: txData,
+          while (receipt === null) {
+            receipt = web3.eth.getTransactionReceipt(res);
+            if (err) {
+              result.log.AppendError({
+                msg: 'ERROR in contracts.deployCompiledContract (no receipt): ' + err
+              });
+            } else if(!receipt) {
+              result.log.AppendStatusUpdate({
+                msg: 'Waiting for contract deployment transaction receipt...'
+              });
+            } else {
+              let instance = contract.at(receipt.contractAddress);
+              for (let i = 0; i < instance.abi.length; i++) {
+                if (instance.abi[i].name) {
+                  instance[instance.abi[i].name].getTx = function() {
+                    let txData = instance[instance.abi[i].name].getData.apply(this, arguments);
+                    let tx = {
+                      from: arguments[arguments.length-1].from,
+                      to: instance.address,
+                      data: txData,
+                    }
+                    if (arguments[arguments.length-1].gas) {
+                      tx.gas = arguments[arguments.length-1].gas;
+                    } else {
+                      tx.gas = web3.eth.estimateGas(tx);
+                    }
+                    return tx;
                   }
-                  if (arguments[arguments.length-1].gas) {
-                    tx.gas = arguments[arguments.length-1].gas;
-                  } else {
-                    tx.gas = web3.eth.estimateGas(tx);
-                  }
-                  return tx;
                 }
               }
+              result.log.AppendStatusUpdate({
+                msg: 'Contract deployed at address ' + receipt.contractAddress
+              });
+              object.Deployed.push(instance);
+              object.NumDeployed++;
+              callback(null);
             }
-            object.Deployed.push(instance);
-            object.NumDeployed++;
-            callback(null);
           }
         } else {
           result.log.AppendError({
@@ -110,37 +120,7 @@ function contracts() {
         cb(null, result);
       });  
     }
-
-    //create accounts
-    if ((config.doAccountCreation === undefined) || (config.doAccountCreation != false)) {
-      stopInterval = true;
-      tasks.push(accounts.Create);
-    }
-    //unlock accounts
-    if ((config.doAccountUnlocking === undefined) || (config.doAccountUnlocking != false)) {
-      if (accounts.Unlocked.length < numRequiredAccounts) {
-        stopInterval = true;
-        tasks.push(accounts.Unlock);
-      }
-    } else { 
-      if ((!accounts.Unlocked) || accounts.Unlocked.length < numRequiredAccounts) {
-        stopInterval = true;
-        /*if not unlocking accounts, it is assumed that all 
-          the needed accounts are already unlocked*/
-        tasks.push(accounts.UpdateRequiredToUnlocked);
-      }
-    }
-
-    //pause (wait) until initialization is completed before resuming
-    if (result.repeater && stopInterval) { result.repeater.pause(); }
-    async.waterfall(tasks, function(err, res) {
-      if (!err) {
-        deployAllContracts();
-        if (result.repeater) { result.repeater.resume(); }
-      } else {
-        cb(err, null);
-      }
-    });
+    deployAllContracts();
   }
 
   function gatherInfo(contractInfo, contractOwnerIndex) {

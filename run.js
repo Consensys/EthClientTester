@@ -3,37 +3,9 @@ var init = require('./init.js');
 var config = require('./config.js');
 
 var results = [];
-var date = new Date();
-var dateString = date.getUTCFullYear() + '-' + 
-  (date.getUTCMonth() + 1) + '-' + date.getUTCDate() + '_' + 
-  date.getUTCHours() + '-' + date.getUTCMinutes();
 
-for (let index = 0; index < config.nodes.length; index++) {
-  let name = config.nodes[index].name;
-  let host = config.nodes[index].web3RPCHost;
-  let port = config.nodes[index].web3RPCPort;
-  let instanceString = name + '_' + host + '_' + port;
-  results[index] = {};
-  results[index].name = name;
-  results[index].web3RPCHost = host;
-  results[index].web3RPCPort = port;
-  results[index].logOptions = {
-    logPathRoot: config.logPathRoot,
-    logDirTest: dateString,
-    logDirInstance: instanceString
-  };
-  /*  logs, accounts, contracts, and transactions are initialized here
-      as non-singleton objects. Since they will be used in different
-      threads (one for each node), this is not really necessary, but
-      just makes it a little clearer that each thread has its own
-      copy that will not be touched by any other thread.
-  */
-  results[index].log = new (require('./log.js'));
-  results[index].accounts = new (require('./accounts.js'));
-  results[index].contracts = new (require('./contracts.js'));
-  results[index].transactions = new (require('./transactions.js'));
-  results[index].blockchain = new (require('./blockchain.js'));
-  results[index].metrics = new (require('./metrics.js'));
+function requireTest(testName) {
+  return require('./tests/' + testName);
 }
 
 function doSequence(seq, cb) {
@@ -46,8 +18,32 @@ function doSequence(seq, cb) {
   });
 }
 
-function initialize(nodeIndex, cb) {
-  let result = results[nodeIndex];
+function initialize(nodeIndex, dateString, numLogDirs, cb) {
+  let result = {};
+  let name = config.nodes[nodeIndex].name;
+  let host = config.nodes[nodeIndex].web3RPCHost;
+  let port = config.nodes[nodeIndex].web3RPCPort;
+  let instanceString = name + '_' + host + '_' + port;
+  result.name = name;
+  result.web3RPCHost = host;
+  result.web3RPCPort = port;
+  result.logOptions = {
+    logPathRoot: config.logPathRoot,
+    logDirTest: numLogDirs + "-" + dateString,
+    logDirInstance: instanceString
+  };
+  /*  logs, accounts, contracts, and transactions are initialized here
+      as non-singleton objects. Since they will be used in different
+      threads (one for each node), this is not really necessary, but
+      just makes it a little clearer that each thread has its own
+      copy that will not be touched by any other thread.
+  */
+  result.log = new (require('./log.js'));
+  result.accounts = new (require('./accounts.js'));
+  result.contracts = new (require('./contracts.js'));
+  result.transactions = new (require('./transactions.js'));
+  result.metrics = new (require('./metrics.js'));
+  results[nodeIndex] = result;
   let seq = [
     function(callback) { callback(null, result) },
     result.log.Initialize,
@@ -63,7 +59,8 @@ function prepare(nodeIndex, testIndex, cb) {
   if (config.nodes[nodeIndex].genTraffic === true) {
     let numTests = config.tests.length;
     let seq = [function(callback) { callback(null, result); }];
-    config.tests[testIndex].prepare(seq);
+    let test = requireTest(config.tests[testIndex])
+    test.prepare(seq);
     doSequence(seq, cb);
   } else {
     cb(null, result);
@@ -75,7 +72,8 @@ function execute(nodeIndex, testIndex, cb) {
   if (config.nodes[nodeIndex].genTraffic === true) {
     let numTests = config.tests.length;
     let seq = [function(callback) { callback(null, result); }];
-    config.tests[testIndex].execute(seq);
+    let test = requireTest(config.tests[testIndex])
+    test.execute(seq);
     doSequence(seq, cb);
   } else {
     cb(null, result);

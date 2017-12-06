@@ -155,8 +155,7 @@ function accounts() {
       result.log.AppendStatusUpdate({
         msg: 'Updating account unlocked state: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
       });
-      if (err) { callback(err); }
-      else { callback(); }
+      callback();
     }, function(err) {
       if (err) {
         result.log.AppendError({
@@ -188,8 +187,7 @@ function accounts() {
       result.log.AppendStatusUpdate({
         msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
       });
-      if (err) { callback(err); }
-      else { callback(); }
+      callback();
     }, function(err) {
       if (err) {
         result.log.AppendError({
@@ -224,8 +222,7 @@ function accounts() {
       result.log.AppendStatusUpdate({
         msg: 'Unlocking accounts: ' + numUnlockedAccounts + ' / ' + numRequiredAccounts
       });
-      if (err) { callback(err); }
-      else { callback(); }
+      callback();
     }, function(err) {
       if (err) {
         result.log.AppendError({
