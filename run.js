@@ -43,6 +43,7 @@ function initialize(nodeIndex, dateString, numLogDirs, cb) {
   result.contracts = new (require('./contracts.js'));
   result.transactions = new (require('./transactions.js'));
   result.metrics = new (require('./metrics.js'));
+  result.blockchain = new (require('./blockchain.js'));
   results[nodeIndex] = result;
   let seq = [
     function(callback) { callback(null, result) },
