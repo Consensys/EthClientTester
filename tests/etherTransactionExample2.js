@@ -5,7 +5,7 @@ var scheduler = require('../scheduler.js');
 let numAccounts = 1;
 let txValue = 1;
 let frequency = 1;
-let numIterations = 10;
+let numIterations = 2;
 let blockFetchFrequency = 100;
 
 module.exports.prepare = function(seq) {
@@ -58,7 +58,7 @@ module.exports.execute = function(seq) {
   seq.push(function(result, cb) {
     let currentIteration = 0;
     let blockCount = result.blockchain.NumNewBlocksSincePreviousSync;
-    let currentBlockNumber = result.blockchain.LastBlockNumber - result.blockCount;
+    let currentBlockNumber = result.blockchain.LastBlockNumber - blockCount;
     scheduler.Repeat(function(repeater) {
       currentIteration++;
       result.repeater = repeater;
