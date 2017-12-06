@@ -2,65 +2,88 @@ function blockchain() {
   let async = require('async');
   let config = require('./config.js');
   let object = {};
+  object.LastBlockNumber = 0;
+  object.NumNewBlocksSincePreviousSync = 0;
+  object.PreviousBlockNumber = 0;
+  object.CurrentBlockNumber = 0;
 
-  // Move this to a util file
-  function convertBlocktimeToSeconds(timestamp){
-    // if quorum
-    return timestamp/1000/1000/1000
-    // testrpc should already be in seconds
+  function sync(result, cb) {
+    let web3 = result.web3;
+    result.log.AppendStatusUpdate({
+      msg: 'Synchronizing blockchain data...'
+    });
+    web3.eth.getBlockNumber(function(err, blockNumber) {
+      if (err) {
+        result.log.AppendError({
+          msg: 'ERROR in blockchain.sync: ' + err
+        });
+      } else {
+        result.log.AppendStatusUpdate({
+          msg: 'Done.'
+        });
+        object.NumNewBlocksSincePreviousSync = blockNumber - object.LastBlockNumber;
+        object.LastBlockNumber = blockNumber
+      }
+      if (cb) {cb(null, result); }
+    });
   }
 
-  function getBlocks(result, cb){
-    let web3 = result.web3
-    web3.eth.getBlock('latest', function(err, block){
+  function logBlockStats(result, cb) {
+    let web3 = result.web3;
+    // if currentBlockNumber is not specified, automatically goes to next block after previous
+    let blockOptions = {
+      currentBlockNumber: object.PreviousBlockNumber + 1
+    }
+    if (result.blockOptions) {
+      blockOptions = result.blockOptions;
+    }
+    
+    function handleGetBlockResponse(err, currentBlock) {
+      if (err) {
+        result.log.AppendError({
+          msg: 'ERROR in blockchain.logBlockStats: ' + err
+        });
+      } else if (currentBlock == null) {
+        // this means all blocks have been fetched
+      } else {
+        object.PreviousBlockNumber = object.CurrentBlockNumber;
+        result.log.AppendStatusUpdate({
+          msg: 'Done.'
+        });
+        let timestamp = currentBlock.timestamp;
+        let blockNumber = currentBlock.number;
+        let gasUsed = currentBlock.gasUsed;
+        let numTransactions = currentBlock.transactions.length;
+        result.log.AppendBlockStats({
+          timestamp: timestamp,
+          blockNumber: blockNumber,
+          gasUsed: gasUsed,
+          numTransactions: numTransactions 
+        });
+      }
+      if (result.repeater) {
+        result.repeater.completed();
+      }
+      if (cb) {cb(null, result); }
+    }
 
-      object.blockHeight = block.number
-      let currentBlockNumber = block.number
-
-      let previousWritePeriod = 2 // seconds. This should be passing in via result
-      let latestBlockTimestamp = convertBlocktimeToSeconds(block.timestamp)
-      let oldestBlockTimestamp = latestBlockTimestamp - previousWritePeriod
-      let currentBlockTimestamp = latestBlockTimestamp // seconds
-      let blockList = []
-      let averageRate = 0
-      async.whilst(function(){
-        return ((currentBlockTimestamp > oldestBlockTimestamp) && (currentBlockNumber > 0))
-      } , function(callback){
-        web3.eth.getBlock(currentBlockNumber, function(err, currentBlock){
-          if(err){
-            result.log.AppendError({
-              msg: 'ERROR in blockchain.getBlock: ' + err
-            });
-          }
-          currentBlockNumber--  
-          currentBlockTimestamp = convertBlocktimeToSeconds(currentBlock.timestamp)
-          if(currentBlockTimestamp > oldestBlockTimestamp){
-            blockList.push(currentBlock)
-          }
-          callback(err, currentBlockNumber)
-        }) 
-      }, function(err, currentBlockNumber){
-        let txCount = 0
-        let sumGasUsed = 0
-        let elapsedTime = Math.abs(blockList[0].timestamp -blockList[blockList.length-1].timestamp) 
-        elapsedTime = convertBlocktimeToSeconds(elapsedTime)
-        for(let i = 1; i < blockList.length; i++){
-          let currentBlock = blockList[i]
-          txCount += currentBlock.transactions.length 
-          sumGasUsed += currentBlock.gasUsed
-        }
-        averageRate = txCount/(elapsedTime)
-        averageGas = sumGasUsed/(elapsedTime)
-        console.log('elapsedTime:', elapsedTime.toFixed(3), '[s]')
-        console.log('txCount:', txCount)
-        console.log('averageRate:', averageRate.toFixed(3), '[tx/s]')
-        console.log('averageGas:', averageGas.toFixed(3), '[gasUnits/s]')
-        cb(null, result)
-      })
-    })
+    // no more blocks to collects stats from
+    if (object.CurrentBlockNumber > object.LastBlockNumber) {
+      result.log.AppendStatusUpdate({
+        msg: 'No new block stats to fetch'
+      });
+    } else {
+      object.CurrentBlockNumber = blockOptions.currentBlockNumber;
+      result.log.AppendStatusUpdate({
+        msg: 'Fetching block stats...'
+      });
+      web3.eth.getBlock(object.CurrentBlockNumber, function(err, currentBlock) {
+        handleGetBlockResponse(err, currentBlock);
+      });
+    }
   }
-
-  object.getBlocks = getBlocks
+  object.Sync = sync;
+  object.LogBlockStats = logBlockStats;
   return object;
 }
 
