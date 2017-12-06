@@ -23,6 +23,8 @@ function blockchain() {
         });
         object.NumNewBlocksSincePreviousSync = blockNumber - object.LastBlockNumber;
         object.LastBlockNumber = blockNumber
+        console.log("NUMNEW: " + object.NumNewBlocksSincePreviousSync);
+        console.log("NUMLAST: " + object.LastBlockNumber);
       }
       if (cb) {cb(null, result); }
     });
@@ -34,9 +36,6 @@ function blockchain() {
     let blockOptions = {
       currentBlockNumber: object.PreviousBlockNumber + 1
     }
-    if (result.blockOptions) {
-      blockOptions = result.blockOptions;
-    }
     
     function handleGetBlockResponse(err, currentBlock) {
       if (err) {
@@ -46,7 +45,6 @@ function blockchain() {
       } else if (currentBlock == null) {
         // this means all blocks have been fetched
       } else {
-        object.PreviousBlockNumber = object.CurrentBlockNumber;
         result.log.AppendStatusUpdate({
           msg: 'Done.'
         });
@@ -77,6 +75,7 @@ function blockchain() {
       result.log.AppendStatusUpdate({
         msg: 'Fetching block stats...'
       });
+      object.PreviousBlockNumber = object.CurrentBlockNumber;
       web3.eth.getBlock(object.CurrentBlockNumber, function(err, currentBlock) {
         handleGetBlockResponse(err, currentBlock);
       });

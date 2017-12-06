@@ -2,11 +2,11 @@ var scheduler = require('../scheduler.js');
 
 // total transaction rate = numAccounts * frequency [tx/s]
 // test run time = numIterations / frequency [s]
-let numAccounts = 1;
+let numAccounts = 10;
 let txValue = 1;
-let frequency = 1;
-let numIterations = 2;
-let blockFetchFrequency = 100;
+let frequency = 50;
+let numIterations = 500;
+let blockFetchFrequency = 20;
 
 module.exports.prepare = function(seq) {
   seq.push(function(result, cb) {
@@ -49,26 +49,19 @@ module.exports.execute = function(seq) {
       }
       transactions.SendBatch(result); // no cb passed to indicate that called from within repeater
     }, numIterations, frequency, function() {
-      cb(null, result);
+      setTimeout(function() {
+        cb(null, result);
+      }, 5000); //wait 5 seconds for transactions to finish processing
     });
   });
   seq.push(function(result, cb) {
     result.blockchain.Sync(result, cb);
   });
   seq.push(function(result, cb) {
-    let currentIteration = 0;
     let blockCount = result.blockchain.NumNewBlocksSincePreviousSync;
-    let currentBlockNumber = result.blockchain.LastBlockNumber - blockCount;
+    result.blockchain.PreviousBlockNumber = result.blockchain.LastBlockNumber - blockCount;
     scheduler.Repeat(function(repeater) {
-      currentIteration++;
       result.repeater = repeater;
-      if (currentIteration == 1) {
-        result.blockOptions = {
-          currentBlockNumber: currentBlockNumber
-        }
-      } else {
-        result.blockOptions = null;
-      }
       result.blockchain.LogBlockStats(result);
     }, blockCount, blockFetchFrequency, function() {
       cb(null, result);
