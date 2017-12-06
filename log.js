@@ -21,6 +21,7 @@ function log() {
     if (!fs.existsSync(logPathInstance)) {
       fs.mkdirSync(logPathInstance);
     } 
+    object.pathTest = logPathTest;
     object.path = logPathInstance;
     object.numErrors = 0;
     result.log = object;
@@ -87,6 +88,49 @@ function log() {
         if (err) {console.log(err);}
       });
       object.numErrors++;
+    }
+  }
+
+  function appendBlockStats(logObj) {
+    let timestamp;
+    if (logObj.timestamp) {
+      timestamp = logObj.timestamp;
+      //move to parent directory since only one copy needed.
+      //Do this as soon as tests are not simply duplicated on each node
+      //(each node can have its own test specified)
+      //let filePath = object.pathTest + '/blockStats.log'; 
+      let filePath = object.path + '/blockStats.log';
+      let str = timestamp + ',' + logObj.blockNumber + ',' + logObj.gasUsed + ',' +
+        logObj.numTransactions + '\n';
+      fs.open(filePath, 'ax', function(err, fd) {
+        if (err && err.code == 'EEXIST') {
+          fs.open(filePath, 'a', function(err, fd) {
+            fs.write(fd, str, function(err, wrtn, str) {
+              if (err) {
+                appendError({
+                  msg: 'ERROR in log.appendBlockStats: ' + err
+                });
+              }
+            });
+          });
+        } else { // file does not exist yet, write header line first
+          fs.open(filePath, 'a', function(err, fd) {
+            let headerStr = 'timestamp,blockNumber,gasUsed,numTransactions\n';
+            let totalStr = headerStr + str;
+            fs.write(fd, totalStr, function(err, wrtn, str) {
+              if (err) {
+                appendError({
+                  msg: 'ERROR in log.appendBlockStats: ' + err
+                });
+              }
+            });
+          });
+        }
+      });
+    } else {
+      appendError({
+        msg: 'ERROR in log.appendBlockStats: logObj contains no timestamp!'
+      });
     }
   }
 
@@ -211,6 +255,7 @@ function log() {
   object.AppendTxHashResponse = appendTxHashResponse;
   object.AppendStatusUpdate = appendStatusUpdate;
   object.AppendError = appendError;
+  object.AppendBlockStats = appendBlockStats;
   object.AppendCPUStats = appendCPUStats;
   object.AppendMemStats = appendMemStats;
   object.AppendDiskStats = appendDiskStats;
