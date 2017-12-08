@@ -61,10 +61,10 @@ function repeat(func, numIterations, frequency, callback) {
 }
 
 function alternate(func1, func2, numIterations, frequency, callback) {
-  repeat(func1, numIterations, frequency/2, callback);
+  repeat(func1, numIterations, frequency);
   setTimeout(function() {
-    repeat(func2, numIterations, frequency/2);
-  }, 1000/frequency);
+    repeat(func2, numIterations, frequency, callback);
+  }, 1000/(2*frequency));
 }
 
 exports.Repeat = repeat;
