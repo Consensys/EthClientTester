@@ -31,9 +31,8 @@ function metrics() {
         clearTimeout(timeoutID);
         let dataObj = JSON.parse(data);
         dataObj.responseReceivedTimestamp = responseReceivedTimestamp;
-        result.log.AppendCPUStats(dataObj.cpuStats);
-        result.log.AppendMemStats(dataObj.memStats);
-        result.log.AppendDiskStats(dataObj.diskStats);
+        dataObj.timestamp = Date.now();
+        result.log.AppendHostStats(dataObj);
         cb(null, result);
       });
       res.on('error', function() {
