@@ -23,8 +23,6 @@ function blockchain() {
         });
         object.NumNewBlocksSincePreviousSync = blockNumber - object.LastBlockNumber;
         object.LastBlockNumber = blockNumber
-        console.log("NUMNEW: " + object.NumNewBlocksSincePreviousSync);
-        console.log("NUMLAST: " + object.LastBlockNumber);
       }
       if (cb) {cb(null, result); }
     });
