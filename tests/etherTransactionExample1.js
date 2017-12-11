@@ -2,12 +2,20 @@ var scheduler = require('../scheduler.js');
 
 // total transaction rate = numAccounts * frequency [tx/s]
 // test run time = numIterations / frequency [s]
-let numAccounts = 20;
+let numAccounts = 5;
 let txValue = 1;
 let frequency = 10;
-let numIterations = 10;
+let numIterations = 600;
 
 module.exports.prepare = function(seq) {
+  seq.push(function(result, cb) {
+    result.blockchain.Sync(result, cb);
+  });
+  seq.push(function(result, cb) {
+    let lastBlockNumber = result.blockchain.LastBlockNumber;
+    result.blockchain.PreviousBlockNumber = lastBlockNumber-1;
+    result.blockchain.LogBlockStats(result, cb);
+  });
   seq.push(function(result, cb) {
     result.accountOptions = {
       numRequiredAccounts: numAccounts
@@ -29,10 +37,6 @@ module.exports.prepare = function(seq) {
 }
 
 module.exports.execute = function(seq) {
-  console.log('=== Running transactions ===')
-  console.log('Attempted transaction rate:', numAccounts*frequency, '[tx/s]')
-  console.log('Run time at attempted rate:', numIterations/frequency, '[s]')
-  console.log('=== Running transactions ===')
   seq.push(function(result, cb) {
     scheduler.Repeat(function(repeater) {
       let transactions = result.transactions;
@@ -49,7 +53,6 @@ module.exports.execute = function(seq) {
       }
       transactions.SendBatch(result); // no cb passed to indicate that called from within repeater
     }, numIterations, frequency, function() {
-      console.log('transactions.SendBatch cb called')
       cb(null, result);
     });
   });

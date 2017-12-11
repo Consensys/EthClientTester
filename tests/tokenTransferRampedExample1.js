@@ -1,9 +1,9 @@
 var scheduler = require('../scheduler.js');
 var ERC20 = require('../contracts/ERC20.js');
 
-var outerIterations = 50
-var outerFrequency = 1/60
-var blockFetchFrequency = 10
+var outerIterations = 10
+var outerFrequency = 1/30
+var blockFetchFrequency = 50
 
 module.exports.prepare = function(seq) {
   seq.push(function(result, cb) {
@@ -41,14 +41,19 @@ module.exports.prepare = function(seq) {
   seq.push(function(result, cb) {
     result.blockchain.Sync(result, cb);
   });
+  seq.push(function(result, cb) {
+    let lastBlockNumber = result.blockchain.LastBlockNumber;
+    result.blockchain.PreviousBlockNumber = lastBlockNumber-1;
+    result.blockchain.LogBlockStats(result, cb);
+  });
 }
 
 module.exports.execute = function(seq) {
   seq.push(function(result, cb) {
     var alternateCount = 0;
     scheduler.Alternate(function(repeater) { // do tx
-      let txFrequency = 10*5/3 + 0/3*alternateCount;
-      let txIterations = Math.floor(((1/outerFrequency)/5)/(1/txFrequency)); // submit tx for 1/5 of the time
+      let txFrequency = 5 + 1*alternateCount;
+      let txIterations = Math.floor(((1/outerFrequency)/3)/(1/txFrequency)); // submit tx for 1/5 of the time
       scheduler.Repeat(function(repeater1) {
         let transactions = result.transactions;
         let contracts = result.contracts;
@@ -95,7 +100,8 @@ module.exports.execute = function(seq) {
     }, function(repeater) { // collect data
       result.blockchain.Sync(result, function(err, result1) {
         let blockCount = result.blockchain.NumNewBlocksSincePreviousSync;
-        result1.blockchain.PreviousBlockNumber = result1.blockchain.LastBlockNumber - blockCount;
+        prevBlockNumber = result1.blockchain.LastBlockNumber - blockCount + 1;
+        result1.blockchain.PreviousBlockNumber = prevBlockNumber;
         scheduler.Repeat(function(repeater1) {
           result1.repeater = repeater1;
           result1.blockchain.LogBlockStats(result1);

@@ -68,8 +68,8 @@ plt.autoscale(enable=True, axis='x', tight=True)
 start, end = axarr[0].get_xlim()
 plt.xticks(np.arange(start, end, np.floor((end-start)/20)))
 
-#axarr[0].legend()
-#axarr[1].legend()
-#axarr[2].legend()
+axarr[0].legend()
+axarr[1].legend()
+axarr[2].legend()
 
 plt.show()

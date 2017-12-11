@@ -2,38 +2,37 @@ var config = {}
 
 /*  Connection settings
 */
-config.clientType = 'ethereumjs-testrpc';
+config.clientType = 'go-quorum';
 config.nodes = [
   {
-    name: "testrpc1",
-    web3RPCHost: "localhost",
-    web3RPCPort: "8545",
+    name: "node1",
+    web3RPCHost: "51.140.42.117",
+    web3RPCPort: "20010",
     genTraffic: true
+  }, {
+    name: "node2",
+    web3RPCHost: "51.140.176.110",
+    web3RPCPort: "20010",
+    genTraffic: false
+  }, {
+    name: "node3",
+    web3RPCHost: "51.140.180.108",
+    web3RPCPort: "20010",
+    genTraffic: false
+  }, {
+    name: "node4",
+    web3RPCHost: "51.140.161.117",
+    web3RPCPort: "20010",
+    genTraffic: false
   }
 ];
 
-//config.clientType = 'go-quorum';
-//config.nodes = [
-//  {
-//    name: "node1",
-//    web3RPCHost: "10.0.0.12",
-//    web3RPCPort: "20010",
-//    genTraffic: true
-//  }, {
-//    name: "node2",
-//    web3RPCHost: "10.0.0.9",
-//    web3RPCPort: "20010",
-//    genTraffic: true
-//  }, {
-//    name: "node3",
-//    web3RPCHost: "10.0.0.11",
-//    web3RPCPort: "20010",
-//    genTraffic: true
-//  }
-//];
-
+/*  Test settings
+*/
 config.tests = [
-  'etherTransactionExample1.js'
+  'tokenTransferRampedExample1.js'
+  //'fetchBlocks.js'
+  //'etherTransactionExample1.js'
   //'tokenContractAsynchronuousExample1.js'
   //'tokenTransferConstantRate1.js'
 ];
