@@ -201,9 +201,6 @@ function log() {
   object.AppendError = appendError;
   object.AppendBlockStats = appendBlockStats;
   object.AppendHostStats = appendHostStats;
-  object.AppendCPUStats = appendCPUStats;
-  object.AppendMemStats = appendMemStats;
-  object.AppendDiskStats = appendDiskStats;
   return object;
 }
 
