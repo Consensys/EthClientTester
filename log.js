@@ -37,10 +37,8 @@ function log() {
     }
     let msg = logObj.msg;
     let filePath = object.path + '/txHashResponses.log';
-    let str = timestamp + ',' + msg + '\n';
-    fs.appendFile(filePath, str, function(err) {
-      if (err) {console.log(err);}
-    });
+    let dataStr = timestamp + ',' + msg;
+    appendToFile(filePath, dataStr, "");
   }
 
   function appendTxHashRequest(logObj) {
@@ -52,10 +50,8 @@ function log() {
     }
     let msg = logObj.msg;
     let filePath = object.path + '/txHashRequests.log';
-    let str = timestamp + ',' + msg + '\n';
-    fs.appendFile(filePath, str, function(err) {
-      if (err) {console.log(err);}
-    });
+    let dataStr = timestamp + ',' + msg;
+    appendToFile(filePath, dataStr, "");
   }
 
   function appendStatusUpdate(logObj) {
@@ -67,10 +63,8 @@ function log() {
     }
     let msg = logObj.msg;
     let filePath = object.path + '/statusUpdates.log';
-    let str = timestamp + ',' + msg + '\n';
-    fs.appendFile(filePath, str, function(err) {
-      if (err) {console.log(err);}
-    });
+    let dataStr = timestamp + ',' + msg;
+    appendToFile(filePath, dataStr, "");
   }
 
   function appendError(logObj) {
@@ -104,32 +98,9 @@ function log() {
       //let filePath = object.pathTest + '/blockStats.log'; 
       let filePath = object.path + '/blockStats.log';
       let str = timestamp + ',' + logObj.blockNumber + ',' + logObj.gasUsed + ',' +
-        logObj.numTransactions + '\n';
-      fs.open(filePath, 'ax', function(err, fd) {
-        if (err && err.code == 'EEXIST') {
-          fs.open(filePath, 'a', function(err, fd) {
-            fs.write(fd, str, function(err, wrtn, str) {
-              if (err) {
-                appendError({
-                  msg: 'ERROR in log.appendBlockStats: ' + err
-                });
-              }
-            });
-          });
-        } else { // file does not exist yet, write header line first
-          fs.open(filePath, 'a', function(err, fd) {
-            let headerStr = 'timestamp,blockNumber,gasUsed,numTransactions\n';
-            let totalStr = headerStr + str;
-            fs.write(fd, totalStr, function(err, wrtn, str) {
-              if (err) {
-                appendError({
-                  msg: 'ERROR in log.appendBlockStats: ' + err
-                });
-              }
-            });
-          });
-        }
-      });
+        logObj.numTransactions;
+      let headerStr = 'timestamp,blockNumber,gasUsed,numTransactions';
+      appendToFile(filePath, dataStr, headerStr);
     } else {
       appendError({
         msg: 'ERROR in log.appendBlockStats: logObj contains no timestamp!'
@@ -142,7 +113,7 @@ function log() {
     if (logObj.timestamp) {
       let timestamp = logObj.timestamp;
       let filePath = object.path + '/hostStats.log';
-      let str = timestamp + ',' + 
+      let dataStr = timestamp + ',' + 
         logObj.requestTimestamp + ',' + 
         logObj.requestReceivedTimestamp + ',' + 
         logObj.responseTimestamp + ',' + 
@@ -158,40 +129,50 @@ function log() {
         logObj.svctm + ',' + 
         logObj.diskkBpsRead + ',' + 
         logObj.diskkBpsWrite + ',' + 
-        logObj.chaindataSizekB + '\n';
-      fs.open(filePath, 'ax', function(err, fd) {
-        if (err && err.code == 'EEXIST') {
-          fs.open(filePath, 'a', function(err, fd) {
-            fs.write(fd, str, function(err, wrtn, str) {
-              if (err) {
-                appendError({
-                  msg: 'ERROR in log.appendHostStats: ' + err
-                });
-              }
-            });
-          });
-        } else { // file does not exist yet, write header line first
-          fs.open(filePath, 'a', function(err, fd) {
-            let headerStr = 'timestamp,requestTimestamp,requestReceivedTimestamp,' + 
-              'responseTimestamp,responseReceivedTimestamp,statsTimestamp,numCpus,' +
-              'memkBTot,utilization,loadAvg1m,memkBAvail,iowait,await,svctm,' + 
-              'diskkBpsRead,diskkBpsWrite,chaindataSizekB\n';
-            let totalStr = headerStr + str;
-            fs.write(fd, totalStr, function(err, wrtn, str) {
-              if (err) {
-                appendError({
-                  msg: 'ERROR in log.appendHostStats: ' + err
-                });
-              }
-            });
-          });
-        }
-      });
+        logObj.chaindataSizekB;
+      let headerStr = 'timestamp,requestTimestamp,requestReceivedTimestamp,' + 
+        'responseTimestamp,responseReceivedTimestamp,statsTimestamp,numCpus,' +
+        'memkBTot,utilization,loadAvg1m,memkBAvail,iowait,await,svctm,' + 
+        'diskkBpsRead,diskkBpsWrite,chaindataSizekB';
+      appendToFile(filePath, dataStr, headerStr);
     } else {
       appendError({
         msg: 'ERROR in log.appendHostStats: logObj contains no timestamp!'
       });
     }
+  }
+ 
+  /*  Appends line to log file. Creates log file if it does not yet 
+      exist, and write a header line if a non-empty header str is provided.
+  */
+  function appendToFile(filePath, dataStr, headerStr) {
+    fs.open(filePath, 'ax', function(err, fd) {
+      if (err && err.code == 'EEXIST') {
+        fs.open(filePath, 'a', function(err, fd) {
+          fs.write(fd, dataStr, function(err, wrtn, str) {
+            if (err) {
+              appendError({
+                msg: 'ERROR in log.appendToFile: ' + err
+              });
+            }
+          });
+        });
+      } else { // file does not exist yet, write header line first
+        fs.open(filePath, 'a', function(err, fd) {
+          let totalStr = dataStr + '\n';
+          if ((headerStr) && (headerStr != "")) {
+            totalStr = headerStr + '\n' + dataStr + '\n';
+          } 
+          fs.write(fd, totalStr, function(err, wrtn, str) {
+            if (err) {
+              appendError({
+                msg: 'ERROR in log.appendToFile: ' + err
+              });
+            }
+          });
+        });
+      }
+    });
   }
 
   object.Initialize = initialize;
