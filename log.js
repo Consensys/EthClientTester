@@ -97,7 +97,7 @@ function log() {
       //(each node can have its own test specified)
       //let filePath = object.pathTest + '/blockStats.log'; 
       let filePath = object.path + '/blockStats.log';
-      let str = timestamp + ',' + logObj.blockNumber + ',' + logObj.gasUsed + ',' +
+      let dataStr = timestamp + ',' + logObj.blockNumber + ',' + logObj.gasUsed + ',' +
         logObj.numTransactions;
       let headerStr = 'timestamp,blockNumber,gasUsed,numTransactions';
       appendToFile(filePath, dataStr, headerStr);
