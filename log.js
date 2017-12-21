@@ -149,7 +149,7 @@ function log() {
     fs.open(filePath, 'ax', function(err, fd) {
       if (err && err.code == 'EEXIST') {
         fs.open(filePath, 'a', function(err, fd) {
-          fs.write(fd, dataStr, function(err, wrtn, str) {
+          fs.write(fd, dataStr + '\n', function(err, wrtn, str) {
             if (err) {
               appendError({
                 msg: 'ERROR in log.appendToFile: ' + err
