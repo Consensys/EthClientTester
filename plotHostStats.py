@@ -67,7 +67,8 @@ timeOffset = data[0][0]['requestTimestamp']
 
 # adjust timestamp values
 for nodeData in data:
-  nodeData['statsTimestamp'] = (nodeData['statsTimestamp'] - timeOffset)/1000
+  #nodeData['statsTimestamp'] = (nodeData['statsTimestamp'] - timeOffset)/1000
+  nodeData['statsTimestamp'] = (nodeData['statsTimestamp'] - timeOffset)
 
 # create figure and subplots
 numDTypes = 7
