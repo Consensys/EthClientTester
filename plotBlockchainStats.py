@@ -59,7 +59,8 @@ timeOffset = data[0][0]['timestamp']
 
 # adjust timestamp values
 for nodeData in data:
-  nodeData['timestamp'] = (nodeData['timestamp'] - timeOffset)/1000
+#  nodeData['timestamp'] = (nodeData['timestamp'] - timeOffset)/1000
+  nodeData['timestamp'] = (nodeData['timestamp'] - timeOffset)
 
 # calculate cummulative tx counts
 data2 = []
@@ -78,34 +79,34 @@ for nodeData in data:
   data2.append(dataTmp)
 
 # calculate tx rate
-data2a = []
-numSamples = 2
-for nodeData in data:
-  currentCount = []
-  cIndex = 0
-  dataTmp = np.zeros((len(nodeData['timestamp']),), dtype=[('timestamp', '<f8'),('txRate', '<f8')])
-  for item in nodeData:
-    if (cIndex == 0):
-      deltaT = (nodeData[cIndex+1]['timestamp'] - item['timestamp'])
-      currentCount.append(item['numTransactions']/deltaT)
-    else:
-      deltaT = (item['timestamp'] - nodeData[cIndex-1]['timestamp'])
-      currentCount.append(item['numTransactions']/deltaT)
-    cIndex = cIndex + 1
-  dataTmp['timestamp'] = nodeData['timestamp']
-  dataTmp['txRate'] = currentCount
-  cIndex = 0
-  dataTmp2 = np.zeros((len(nodeData['timestamp']),), dtype=[('timestamp', '<f8'),('avgTxRate', '<f8')])
-  rate = []
-  for item in dataTmp:
-    if (cIndex < (numSamples-1)):
-      rate.append(0)
-    else:
-      rate.append(np.sum(dataTmp['txRate'][(cIndex-numSamples+1):cIndex])/numSamples)
-    cIndex += 1
-  dataTmp2['timestamp'] = dataTmp['timestamp']
-  dataTmp2['avgTxRate'] = rate
-  data2a.append(dataTmp2)
+#data2a = []
+#numSamples = 2
+#for nodeData in data:
+#  currentCount = []
+#  cIndex = 0
+#  dataTmp = np.zeros((len(nodeData['timestamp']),), dtype=[('timestamp', '<f8'),('txRate', '<f8')])
+#  for item in nodeData:
+#    if (cIndex == 0):
+#      deltaT = (nodeData[cIndex+1]['timestamp'] - item['timestamp'])
+#      currentCount.append(item['numTransactions']/deltaT)
+#    else:
+#      deltaT = (item['timestamp'] - nodeData[cIndex-1]['timestamp'])
+#      currentCount.append(item['numTransactions']/deltaT)
+#    cIndex = cIndex + 1
+#  dataTmp['timestamp'] = nodeData['timestamp']
+#  dataTmp['txRate'] = currentCount
+#  cIndex = 0
+#  dataTmp2 = np.zeros((len(nodeData['timestamp']),), dtype=[('timestamp', '<f8'),('avgTxRate', '<f8')])
+#  rate = []
+#  for item in dataTmp:
+#    if (cIndex < (numSamples-1)):
+#      rate.append(0)
+#    else:
+#      rate.append(np.sum(dataTmp['txRate'][(cIndex-numSamples+1):cIndex])/numSamples)
+#    cIndex += 1
+#  dataTmp2['timestamp'] = dataTmp['timestamp']
+#  dataTmp2['avgTxRate'] = rate
+#  data2a.append(dataTmp2)
 
 # calculate tx rate / s averaged over some time
 binDelta = 1
@@ -184,7 +185,7 @@ plt.xlabel('Time [s]')
 plt.autoscale(enable=True, axis='x', tight=True)
 #plt.autoscale(enable=True, axis='y', tight=True)
 start, end = axarr[0].get_xlim()
-plt.xticks(np.arange(0, end, np.floor((end)/25)))
+#plt.xticks(np.arange(0, end, np.floor((end)/25)))
 
 #axarr[0].legend()
 #axarr[1].legend()
