@@ -89,9 +89,12 @@ function log() {
     let timestamp;
     if (logObj.timestamp) {
       timestamp = logObj.timestamp;
-      if (config.clientType == 'go-quorum') { //timestamp in nanoseconds
-        timestamp = Math.floor(timestamp/1000000);
-      }
+      //*********************************************************
+      // Appears to be RAFT-specific, and not Quorum
+      //if (config.clientType == 'go-quorum') { //timestamp in nanoseconds
+      //  timestamp = Math.floor(timestamp/1000000);
+      //}
+      //*********************************************************
       //move to parent directory since only one copy needed.
       //Do this as soon as tests are not simply duplicated on each node
       //(each node can have its own test specified)
