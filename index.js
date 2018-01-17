@@ -1,4 +1,5 @@
 var cluster = require('cluster');
+var fs = require('fs');
 var config = require('./config.js');
 config = loadSettings();
 var run = require('./run.js');
@@ -14,6 +15,9 @@ if (cluster.isMaster) {
   let dateString = date.getUTCFullYear() + '_' + 
     (date.getUTCMonth() + 1) + '_' + date.getUTCDate() + '-' + 
     date.getUTCHours() + '_' + date.getUTCMinutes();
+  if (!fs.existsSync(config.logPathRoot)) {
+    fs.mkdirSync(config.logPathRoot);
+  } 
   let numLogDirs = getNumDirsIn(config.logPathRoot);
 
   function isLastWorkerToBeInitialized(worker) {
