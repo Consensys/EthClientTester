@@ -2,10 +2,10 @@ var scheduler = require('../scheduler.js');
 
 // total transaction rate = numAccounts * frequency [tx/s]
 // test run time = numIterations / frequency [s]
-let numAccounts = 5;
+let numAccounts = 1;
 let txValue = 1;
-let frequency = 10;
-let numIterations = 600;
+let frequency = 1;
+let numIterations = 100000;
 
 module.exports.prepare = function(seq) {
   seq.push(function(result, cb) {
