@@ -429,7 +429,7 @@ function accounts() {
     let accountOptions = result.accountOptions;
     let numRequiredAccounts = accountOptions.numRequiredAccounts;
     // at object point it should not be possible to have numRequiredAccounts > existing.length
-    if (config.doEtherDistribution === true) {
+    if (config.doEtherRedistribution === true) {
       let requiredAccounts = object.Existing.slice(0, numRequiredAccounts);
       let requiredAccountBalances = Math.floor(object.Balances[0]/numRequiredAccounts);
       let responseCount = 0;
