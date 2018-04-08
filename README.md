@@ -9,7 +9,7 @@ The EthClientTester does the following:
  - Connects to the rpc interfaces of a list of nodes, specified in config.js, using web3.js. 
  - Runs the test specified in config.js on the nodes specified in config.js.
  - Records timestamped transaction hashes and errors for each node.
- - Includes some simple python-based plotting tolls forviewing data.
+ - Includes some simple python-based plotting tools for viewing data.
 
 If an EthClientProbe (https://github.com/rynobey/EthClientProbe) is running on a node's host, the EthClientTester can collect additional information (for every node running an EthClientProbe), which currently includes:
  - CPU stats: iowait, utilization, loadAvg
