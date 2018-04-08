@@ -238,6 +238,9 @@ function getNumDirsIn(dir) {
   let { join } = require('path');
   let { lstatSync, readdirSync } = require('fs');
   let fs = require('fs');
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+  } 
   let dirs = fs.readdirSync(dir);
   return (dirs.length + 1);
 }
