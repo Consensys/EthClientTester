@@ -1,7 +1,7 @@
 var scheduler = require('../scheduler.js');
 
-var blockFrom = 38802; // change this to the desired starting block
-var frequency = 50; // for now this should be limited to preserve order of blocks received (will add sorting of blocks later)
+var blockFrom = 1; // change this to the desired starting block
+var frequency = 50;
 
 module.exports.prepare = function(seq) {
   seq.push(function(result, cb) {

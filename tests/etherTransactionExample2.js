@@ -6,7 +6,7 @@ let numAccounts = 10;
 let txValue = 1;
 let frequency = 50;
 let numIterations = 500;
-let blockFetchFrequency = 20;
+let blockFetchFrequency = 50;
 
 module.exports.prepare = function(seq) {
   seq.push(function(result, cb) {
